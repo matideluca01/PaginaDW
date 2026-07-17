@@ -1,0 +1,20 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="200" height="200" rx="24" fill="#111110"/>
+  <g transform="translate(100,100)">
+    <circle r="58" fill="none" stroke="#FEBD11" stroke-width="9"/>
+    <g fill="#FEBD11">
+      <rect x="-8" y="-70" width="16" height="20" rx="2"/>
+      <rect x="-8" y="50" width="16" height="20" rx="2"/>
+      <rect x="-70" y="-8" width="20" height="16" rx="2"/>
+      <rect x="50" y="-8" width="20" height="16" rx="2"/>
+      <rect x="-8" y="-70" width="16" height="20" rx="2" transform="rotate(45)"/>
+      <rect x="-8" y="50" width="16" height="20" rx="2" transform="rotate(45)"/>
+      <rect x="-70" y="-8" width="20" height="16" rx="2" transform="rotate(45)"/>
+      <rect x="50" y="-8" width="20" height="16" rx="2" transform="rotate(45)"/>
+    </g>
+    <circle r="38" fill="#111110" stroke="#FEBD11" stroke-width="5"/>
+    <path d="M -16 16 L 18 -18" stroke="#F5F3EC" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="-18" cy="18" r="12" fill="none" stroke="#F5F3EC" stroke-width="8"/>
+  </g>
+  <text x="100" y="182" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="26" letter-spacing="2" fill="#F5F3EC">D.W.</text>
+</svg>

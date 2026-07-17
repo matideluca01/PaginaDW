@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D.W.Mendoza — Herramientas Industriales</title>
+<link rel="icon" type="image/svg+xml" href="images/logo-circle.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#FEBD11;
+    --yellow-dark:#E0A400;
+    --black:#111110;
+    --charcoal:#1D1D1B;
+    --charcoal-2:#26251F;
+    --off-white:#F5F3EC;
+    --steel:#8A8A7F;
+    --steel-dark:#55544C;
+    --line:#3A392F;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--off-white);
+    color:var(--black);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+
+  /* Entrance + scroll-reveal animation system */
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(22px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .fade-in-up{animation:fadeUp .7s cubic-bezier(.2,.7,.3,1) both;}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .fade-in-up, .reveal{animation:none!important;transition:none!important;opacity:1!important;transform:none!important;}
+    html{scroll-behavior:auto;}
+  }
+  h1,h2,h3,.display{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px;}
+
+  /* Hazard stripe signature element */
+  .hazard{
+    height:10px;
+    background:repeating-linear-gradient(135deg,var(--black) 0 18px,var(--yellow) 18px 36px);
+  }
+
+  /* Header */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:var(--black);
+    border-bottom:3px solid var(--yellow);
+    transition:box-shadow .3s ease, padding .3s ease;
+  }
+  header.scrolled{box-shadow:0 8px 24px rgba(0,0,0,0.35);}
+  .header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;max-width:1200px;margin:0 auto;
+  }
+  .logo{
+    display:flex;flex-direction:column;line-height:1;color:var(--off-white);
+  }
+  .logo-img{height:52px;width:52px;display:block;border-radius:50%;}
+  .logo .sub{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--steel);
+    letter-spacing:0.15em;margin-top:2px;
+  }
+  nav{display:flex;gap:28px;align-items:center;}
+  nav a{
+    color:var(--off-white);font-size:14px;font-weight:500;
+    text-transform:uppercase;letter-spacing:0.05em;
+    padding-bottom:4px;border-bottom:2px solid transparent;
+    transition:border-color .2s;
+  }
+  nav a:hover{border-color:var(--yellow);}
+  .btn-wsp{
+    background:var(--yellow);color:var(--black)!important;
+    padding:10px 18px;font-weight:700;border-radius:var(--radius);
+    border-bottom:none!important;
+  }
+  .nav-toggle{display:none;background:none;border:none;color:var(--off-white);font-size:26px;cursor:pointer;}
+
+  .nav-item{position:relative;}
+  .dropdown-toggle{
+    background:none;border:none;color:var(--off-white);font-size:14px;font-weight:500;
+    text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;
+    display:flex;align-items:center;gap:5px;padding-bottom:4px;border-bottom:2px solid transparent;
+    font-family:'Inter',sans-serif;
+  }
+  .dropdown-toggle svg{width:11px;height:11px;transition:transform .2s;}
+  .nav-item.open .dropdown-toggle svg{transform:rotate(180deg);}
+  .nav-item:hover .dropdown-toggle, .nav-item.open .dropdown-toggle{border-color:var(--yellow);}
+  .dropdown-menu{
+    position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%);
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    min-width:230px;box-shadow:0 12px 28px rgba(0,0,0,0.25);
+    opacity:0;visibility:hidden;transform:translateX(-50%) translateY(-6px);
+    transition:opacity .18s ease, transform .18s ease, visibility .18s;
+    z-index:60;
+  }
+  .nav-item.open .dropdown-menu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
+  .dropdown-menu a{
+    display:flex;flex-direction:column;gap:2px;padding:12px 16px;color:var(--black)!important;
+    border-bottom:1px solid #EDEBDE;font-size:13.5px;font-weight:600;text-transform:none!important;
+    letter-spacing:0;border-bottom-width:1px!important;
+  }
+  .dropdown-menu a:last-child{border-bottom:none;}
+  .dropdown-menu a small{font-weight:400;color:var(--steel-dark);font-size:11.5px;}
+  .dropdown-menu a:hover{background:#FBFAF3;border-bottom-color:#EDEBDE!important;}
+
+  /* Hero */
+  .hero{
+    background:var(--black);color:var(--off-white);
+    padding:64px 24px 56px;position:relative;overflow:hidden;
+  }
+  .hero-watermark{
+    position:absolute;top:50%;right:-90px;transform:translateY(-50%);
+    width:560px;height:560px;opacity:0.07;pointer-events:none;z-index:1;
+  }
+  .hero-watermark img{width:100%;height:100%;}
+  .hero-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.2fr 0.8fr;gap:40px;align-items:center;position:relative;z-index:2;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;color:var(--yellow);font-size:13px;
+    letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;display:block;
+  }
+  .hero h1{
+    font-size:clamp(36px,6vw,64px);line-height:0.98;font-weight:700;
+  }
+  .hero h1 .accent{color:var(--yellow);}
+  .hero p{
+    margin-top:20px;max-width:46ch;color:#D8D6C8;font-size:16px;
+  }
+  .hero-cta{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 26px;font-weight:700;text-transform:uppercase;
+    font-size:14px;letter-spacing:0.03em;border-radius:var(--radius);
+    cursor:pointer;border:2px solid transparent;transition:transform .15s, background .2s;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn-primary{background:var(--yellow);color:var(--black);}
+  .btn-primary:hover{background:var(--yellow-dark);}
+  .btn-outline{border-color:var(--off-white);color:var(--off-white);background:transparent;}
+  .btn-outline:hover{background:var(--off-white);color:var(--black);}
+
+  .plate{
+    background:
+      linear-gradient(rgba(29,29,27,0.93),rgba(29,29,27,0.93)),
+      url('images/visitas-industriales.webp') center/cover no-repeat;
+    border:1px solid var(--line);
+    padding:26px;border-radius:var(--radius);
+  }
+  .plate .plate-title{
+    font-family:'JetBrains Mono',monospace;color:var(--yellow);
+    font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px;
+    border-bottom:1px solid var(--line);padding-bottom:10px;
+  }
+  .plate-row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;color:#D8D6C8;}
+  .plate-row:last-child{border-bottom:none;}
+  .plate-row .k{color:var(--steel);min-width:80px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;padding-top:2px;}
+
+  /* Brand strip */
+  .brands{
+    background:var(--off-white);padding:22px 0;border-bottom:1px solid var(--line);
+    overflow:hidden;pointer-events:none;user-select:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  }
+  .brands-track{
+    display:flex;width:max-content;gap:64px;
+    animation:marquee 28s linear infinite;
+  }
+  .brands-track span{
+    font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--steel-dark);
+    letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;
+  }
+  .brands-track span b{color:var(--black);font-weight:700;}
+  @keyframes marquee{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .brands-track{animation:none;}
+  }
+
+  /* About / Quiénes somos */
+  .about{padding:60px 24px;background:#fff;border-bottom:1px solid var(--line);}
+  .about-inner{display:grid;grid-template-columns:0.9fr 1.1fr;gap:44px;align-items:center;}
+  .about-text .kicker{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;
+    color:var(--yellow-dark);text-transform:uppercase;display:block;margin-bottom:10px;
+  }
+  .about-text h2{font-size:28px;margin-bottom:14px;line-height:1.15;}
+  .about-text p{font-size:14.5px;color:var(--steel-dark);line-height:1.7;}
+  .about-values{display:grid;gap:18px;}
+  .value{display:flex;gap:14px;align-items:flex-start;}
+  .value-icon{
+    width:38px;height:38px;flex-shrink:0;border-radius:50%;background:var(--black);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .value-icon svg{width:18px;height:18px;color:var(--yellow);}
+  .value h3{font-size:15px;margin-bottom:3px;}
+  .value p{font-size:13px;color:var(--steel-dark);line-height:1.5;}
+  @media (max-width:820px){
+    .about-inner{grid-template-columns:1fr;}
+  }
+
+  /* Catalog */
+  .catalog{padding:56px 24px 80px;}
+  .catalog-head{margin-bottom:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .catalog-head .kicker{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;
+    color:var(--yellow-dark);text-transform:uppercase;display:block;margin-bottom:8px;
+  }
+  .catalog-head h2{font-size:34px;}
+  .catalog-head p{color:var(--steel-dark);margin-top:8px;max-width:60ch;}
+
+  .catalog-layout{display:grid;grid-template-columns:230px 1fr;gap:36px;align-items:start;}
+
+  .cat-sidebar{
+    position:sticky;top:88px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .cat-sidebar .cs-head{
+    background:var(--black);color:var(--yellow);padding:12px 16px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+  }
+  .cat-sidebar .cs-head-2{border-top:1px solid var(--line);}
+  .cat-sidebar ul{list-style:none;}
+  .cat-sidebar li button{
+    width:100%;text-align:left;background:none;border:none;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:11px 16px;font-size:13.5px;color:var(--steel-dark);
+    border-left:3px solid transparent;border-bottom:1px solid #EDEBDE;
+    transition:all .15s;
+  }
+  .cat-sidebar li:last-child button{border-bottom:none;}
+  .cat-sidebar li button:hover{background:#FBFAF3;color:var(--black);}
+  .cat-sidebar li button.active{
+    border-left-color:var(--yellow);background:#FBFAF3;color:var(--black);font-weight:600;
+  }
+  .cat-sidebar li button .cnt{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--steel);
+  }
+  .cat-sidebar li button.active .cnt{color:var(--yellow-dark);}
+
+  .toolbar{
+    display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px;
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;
+  }
+  .search-box{
+    flex:1;min-width:180px;display:flex;align-items:center;gap:8px;
+    border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px;background:var(--off-white);
+  }
+  .search-box svg{width:16px;height:16px;color:var(--steel-dark);flex-shrink:0;}
+  .search-box input{border:none;background:none;outline:none;font-size:13.5px;width:100%;font-family:'Inter',sans-serif;}
+  .toolbar select{min-width:150px;}
+
+  .active-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;min-height:0;}
+  .tag-pill{
+    display:inline-flex;align-items:center;gap:6px;background:var(--black);color:var(--yellow);
+    font-size:12px;font-weight:600;padding:6px 10px 6px 12px;border-radius:20px;
+  }
+  .tag-pill button{background:none;border:none;color:var(--yellow);cursor:pointer;font-size:14px;line-height:1;}
+
+  .mobile-cats{
+    display:none;gap:10px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;
+  }
+  .mobile-filters{display:none;}
+  .mf-tabs{display:flex;gap:8px;margin-bottom:12px;}
+  .mf-tab{
+    flex:1;padding:9px;border:1px solid var(--line);background:#fff;border-radius:var(--radius);
+    font-size:13px;font-weight:600;color:var(--steel-dark);cursor:pointer;
+  }
+  .mf-tab.active{background:var(--black);color:var(--yellow);border-color:var(--black);}
+  .chip{
+    padding:8px 16px;border:1px solid var(--line);border-radius:20px;flex-shrink:0;
+    font-size:13px;font-weight:500;cursor:pointer;background:#fff;
+    transition:all .15s;color:var(--steel-dark);
+  }
+  .chip:hover{border-color:var(--black);transform:translateY(-1px);}
+  .chip.active{background:var(--black);color:var(--yellow);border-color:var(--black);transform:scale(1.04);}
+
+  select{
+    padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);
+    font-family:'Inter',sans-serif;font-size:13px;background:#fff;color:var(--black);
+  }
+  .result-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--steel);margin-bottom:14px;display:block;}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+    gap:20px;margin-top:24px;
+  }
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    display:flex;flex-direction:column;overflow:hidden;
+    transition:box-shadow .2s, transform .2s;
+    cursor:pointer;
+  }
+  .card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.12);transform:translateY(-5px);}
+  .card-photo{
+    aspect-ratio:4/3;background:
+      repeating-linear-gradient(135deg,var(--charcoal) 0 14px,var(--charcoal-2) 14px 28px);
+    background-size:200% 200%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+    overflow:hidden;transition:background-position .5s ease;gap:8px;
+  }
+  .card:hover .card-photo{background-position:100% 100%;}
+  .card:hover .ph-label{transform:scale(1.05);}
+  .prod-thumb{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;
+    transition:transform .5s ease;
+  }
+  .card:hover .prod-thumb{transform:scale(1.05);}
+  .card-photo .tool-icon{width:34px;height:34px;color:var(--yellow);opacity:0.9;transition:transform .5s ease;position:relative;z-index:0;}
+  .card:hover .tool-icon{transform:scale(1.08) rotate(-4deg);}
+  .ph-label{transition:transform .5s ease;}
+  .card-photo .ph-label{
+    font-family:'JetBrains Mono',monospace;color:var(--steel);font-size:10.5px;
+    letter-spacing:0.1em;text-transform:uppercase;text-align:center;padding:0 12px;
+    position:relative;z-index:0;
+  }
+  .card-photo .brand-tag{
+    position:absolute;top:10px;left:10px;background:var(--yellow);color:var(--black);
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+    padding:4px 8px;letter-spacing:0.05em;text-transform:uppercase;border-radius:2px;
+    z-index:2;
+  }
+  .card-photo .hover-view{
+    position:absolute;inset:0;background:rgba(17,17,16,0.72);display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .25s ease;color:var(--yellow);font-family:'JetBrains Mono',monospace;
+    font-size:12px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;z-index:3;
+  }
+  .card:hover .hover-view{opacity:1;}
+  .card-body{padding:16px 16px 18px;display:flex;flex-direction:column;flex:1;}
+  .card-cat{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--steel);
+    text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;
+  }
+  .card-title{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:8px;min-height:39px;}
+  .card-desc{font-size:12.5px;color:var(--steel-dark);line-height:1.5;flex:1;margin-bottom:14px;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+  .card-actions{display:flex;gap:8px;}
+  .card-actions button{
+    flex:1;padding:10px 8px;font-size:12px;font-weight:700;text-transform:uppercase;
+    border-radius:var(--radius);cursor:pointer;letter-spacing:0.02em;border:2px solid var(--black);
+    transition:all .15s;
+  }
+  .card-actions .btn-consult{background:#fff;color:var(--black);}
+  .card-actions .btn-consult:hover{background:var(--black);color:var(--off-white);}
+  .card-actions .btn-order{background:var(--black);color:var(--yellow);}
+  .card-actions .btn-order:hover{background:var(--yellow);color:var(--black);border-color:var(--yellow);}
+
+  .no-results{text-align:center;padding:60px 20px;color:var(--steel-dark);font-family:'JetBrains Mono',monospace;}
+
+  .load-more{display:block;margin:36px auto 0;}
+
+  /* Info / how it works */
+  .how{background:var(--black);color:var(--off-white);padding:64px 24px;}
+  .how .wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;}
+  .how h2{color:var(--off-white);font-size:28px;margin-bottom:36px;grid-column:1/-1;}
+  .step{border-left:3px solid var(--yellow);padding-left:18px;}
+  .step .num{font-family:'JetBrains Mono',monospace;color:var(--yellow);font-size:13px;letter-spacing:0.1em;}
+  .step h3{font-size:19px;margin:8px 0 8px;}
+  .step p{font-size:14px;color:#C9C7B8;}
+
+  /* Services section */
+  .services{padding:64px 24px 72px;background:#EFEDE2;}
+  .services-head{margin-bottom:36px;}
+  .services-head .kicker{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;
+    color:var(--yellow-dark);text-transform:uppercase;display:block;margin-bottom:8px;
+  }
+  .services-head h2{font-size:32px;}
+  .services-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:24px;align-items:stretch;}
+
+  .svc-card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:30px;display:flex;flex-direction:column;scroll-margin-top:100px;
+  }
+  .svc-card.svc-with-photo{padding:0;overflow:hidden;}
+  .svc-card.svc-with-photo .svc-photo{background:#1D1D1B;}
+  .svc-icon{
+    width:48px;height:48px;border:2px solid var(--black);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+    overflow:hidden;background:#fff;
+  }
+  .svc-icon img{width:100%;height:100%;object-fit:contain;padding:7px;}
+  .svc-icon svg{width:22px;height:22px;color:var(--black);}
+  .svc-card h3{font-size:20px;margin-bottom:10px;}
+  .svc-card p{font-size:14px;color:var(--steel-dark);line-height:1.6;margin-bottom:22px;flex:1;}
+  .svc-card .btn{align-self:flex-start;}
+
+  /* Industrial visits — premium/corporate card */
+  .svc-industrial{
+    background:var(--black);color:var(--off-white);border:1px solid var(--black);
+    position:relative;overflow:hidden;padding:0;
+  }
+  .svc-photo{
+    aspect-ratio:16/8;position:relative;overflow:hidden;
+  }
+  .svc-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease;}
+  .svc-industrial:hover .svc-photo img{transform:scale(1.05);}
+  .svc-photo::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(0deg,var(--black) 0%,rgba(17,17,16,0.15) 65%);
+  }
+  .svc-industrial-body{padding:30px;position:relative;}
+  .svc-industrial::before{
+    content:'';position:absolute;top:0;right:0;width:10px;height:100%;
+    background:repeating-linear-gradient(135deg,var(--yellow) 0 12px,var(--black) 12px 24px);
+    z-index:2;
+  }
+  .svc-industrial h3{color:var(--off-white);}
+  .svc-industrial p{color:#C9C7B8;}
+  .svc-industrial .eq-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+  .svc-industrial .eq-tags span{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
+    border:1px solid var(--line);color:var(--off-white);padding:5px 10px;border-radius:14px;
+  }
+  .svc-industrial .svc-actions{display:flex;gap:12px;flex-wrap:wrap;}
+  .svc-industrial .svc-actions .btn-primary{
+    background:var(--yellow);color:var(--black);
+  }
+  .svc-industrial .svc-actions .btn-outline{
+    border-color:var(--off-white);color:var(--off-white);
+  }
+
+  @media (max-width:820px){
+    .services-grid{grid-template-columns:1fr;}
+  }
+
+  /* Location / map */
+  .location{padding:64px 24px;background:var(--off-white);}
+  .location-grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:36px;align-items:stretch;}
+  .location-info{
+    background:var(--black);color:var(--off-white);border-radius:var(--radius);
+    padding:32px;display:flex;flex-direction:column;justify-content:center;
+  }
+  .location-info .kicker{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;
+    color:var(--yellow);text-transform:uppercase;display:block;margin-bottom:10px;
+  }
+  .location-info h2{color:var(--off-white);font-size:28px;margin-bottom:16px;}
+  .location-info .addr{font-size:16px;margin-bottom:6px;}
+  .location-info .hrs{font-size:14px;color:#C9C7B8;margin-bottom:26px;}
+  .location-info .btn-primary{align-self:flex-start;}
+  .map-frame{
+    border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);min-height:280px;
+  }
+  .map-frame iframe{width:100%;height:100%;border:0;display:block;min-height:280px;}
+  @media (max-width:820px){
+    .location-grid{grid-template-columns:1fr;}
+  }
+
+  footer{background:var(--charcoal);color:var(--off-white);padding:48px 24px 24px;}
+  footer .wrap{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:36px;}
+  footer h3{font-size:16px;color:var(--yellow);margin-bottom:14px;letter-spacing:0.05em;}
+  footer p, footer a{font-size:14px;color:#C9C7B8;display:block;margin-bottom:8px;}
+  footer a:hover{color:var(--yellow);}
+  .foot-bottom{
+    max-width:1200px;margin:36px auto 0;padding-top:20px;border-top:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--steel);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+
+  /* WhatsApp float */
+  .wsp-float{
+    position:fixed;bottom:22px;right:22px;z-index:60;
+    background:#25D366;color:#fff;width:58px;height:58px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.3);
+  }
+  .wsp-float svg{width:28px;height:28px;}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(17,17,16,0.75);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:#fff;max-width:440px;width:100%;border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .modal-head{background:var(--black);color:var(--off-white);padding:18px 22px;position:relative;}
+  .modal-head h3{font-size:18px;color:var(--off-white);}
+  .modal-head .sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--yellow);margin-top:4px;}
+  .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--off-white);font-size:22px;cursor:pointer;}
+  .modal-body{padding:22px;}
+  .modal-body label{
+    display:block;font-size:13px;font-weight:600;margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .option-row{display:flex;gap:10px;}
+  .option-row button{
+    flex:1;padding:12px;border:2px solid var(--line);border-radius:var(--radius);
+    background:#fff;cursor:pointer;font-weight:600;font-size:14px;transition:all .15s;
+  }
+  .option-row button.sel{background:var(--yellow);border-color:var(--yellow);}
+  .modal-body input, .modal-body textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);
+    font-family:'Inter',sans-serif;font-size:14px;
+  }
+  .modal-body textarea{resize:vertical;min-height:70px;}
+  .modal-send{
+    width:100%;margin-top:20px;padding:14px;background:var(--black);color:var(--yellow);
+    border:none;border-radius:var(--radius);font-weight:700;text-transform:uppercase;
+    letter-spacing:0.03em;cursor:pointer;font-size:14px;
+  }
+  .modal-send:hover{background:var(--yellow);color:var(--black);}
+
+  /* Cart button (header) */
+  .cart-btn{
+    position:relative;background:none;border:none;color:var(--off-white);cursor:pointer;
+    padding:6px;display:flex;align-items:center;
+  }
+  .cart-btn svg{width:22px;height:22px;}
+  .cart-count{
+    position:absolute;top:-4px;right:-6px;background:var(--yellow);color:var(--black);
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+    min-width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    padding:0 3px;
+  }
+
+  /* Cart modal */
+  .cart-modal{max-width:460px;}
+  .cart-items{max-height:260px;overflow-y:auto;margin-bottom:6px;}
+  .cart-item{
+    display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #EDEBDE;
+  }
+  .cart-item .ci-info{flex:1;min-width:0;}
+  .cart-item .ci-name{font-size:13.5px;font-weight:600;line-height:1.3;}
+  .cart-item .ci-brand{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--steel);text-transform:uppercase;margin-top:2px;}
+  .cart-item .ci-qty{display:flex;align-items:center;gap:6px;}
+  .cart-item .ci-qty button{
+    width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:50%;
+    cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .cart-item .ci-qty span{font-family:'JetBrains Mono',monospace;font-size:13px;min-width:16px;text-align:center;}
+  .cart-item .ci-remove{background:none;border:none;color:var(--steel);cursor:pointer;font-size:18px;padding:0 2px;}
+  .cart-item .ci-remove:hover{color:#B23A2E;}
+  .cart-empty{
+    text-align:center;padding:26px 10px;color:var(--steel-dark);font-size:13.5px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .cart-clear{
+    width:100%;margin-top:10px;padding:10px;background:none;border:none;
+    color:var(--steel-dark);font-size:12.5px;text-decoration:underline;cursor:pointer;
+  }
+
+  /* Add-to-cart feedback */
+  @keyframes popCheck{0%{transform:scale(0.8);opacity:0;}60%{transform:scale(1.08);opacity:1;}100%{transform:scale(1);}}
+  .btn-order.added{background:#2E7D32;border-color:#2E7D32;color:#fff;animation:popCheck .3s ease;}
+  .d-order.added{background:#2E7D32;border-color:#2E7D32;color:#fff;animation:popCheck .3s ease;}
+
+  /* Detail modal */
+  .detail-modal{max-width:600px;}
+  .detail-photo{
+    aspect-ratio:16/9;background:repeating-linear-gradient(135deg,var(--charcoal) 0 16px,var(--charcoal-2) 16px 32px);
+    display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+  }
+  .detail-photo .ph-label{color:var(--steel);font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;position:relative;z-index:0;}
+  .detail-photo .brand-tag{position:absolute;top:14px;left:14px;background:var(--yellow);color:var(--black);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:5px 10px;letter-spacing:0.05em;text-transform:uppercase;border-radius:2px;z-index:2;}
+  .detail-photo .modal-close{z-index:2;}
+  .detail-body{padding:24px;}
+  .detail-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .detail-cats span{
+    font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;
+    letter-spacing:0.08em;color:var(--steel-dark);border:1px solid var(--line);
+    padding:3px 8px;border-radius:12px;
+  }
+  .detail-title{font-size:22px;margin-bottom:14px;line-height:1.2;}
+  .detail-desc{font-size:14px;color:var(--steel-dark);line-height:1.65;margin-bottom:22px;}
+  .detail-actions{display:flex;gap:10px;}
+  .detail-actions button{
+    flex:1;padding:13px;font-size:13px;font-weight:700;text-transform:uppercase;
+    border-radius:var(--radius);cursor:pointer;letter-spacing:0.03em;border:2px solid var(--black);
+    transition:all .15s;
+  }
+  .detail-actions .d-consult{background:#fff;color:var(--black);}
+  .detail-actions .d-consult:hover{background:var(--black);color:var(--off-white);}
+  .detail-actions .d-order{background:var(--black);color:var(--yellow);}
+  .detail-actions .d-order:hover{background:var(--yellow);color:var(--black);border-color:var(--yellow);}
+
+  @media (max-width:820px){
+    nav{position:fixed;top:64px;left:0;right:0;background:var(--black);flex-direction:column;
+      padding:16px 24px;gap:16px;display:none;border-bottom:3px solid var(--yellow);}
+    nav.open{display:flex;}
+    .nav-toggle{display:block;}
+    .hero-inner{grid-template-columns:1fr;}
+    .how .wrap{grid-template-columns:1fr;}
+    footer .wrap{grid-template-columns:1fr;}
+    .catalog-layout{grid-template-columns:1fr;}
+    .cat-sidebar{display:none;}
+    .mobile-filters{display:block;}
+    .mobile-cats{display:flex;}
+    .services-grid{grid-template-columns:1fr;}
+    nav .nav-item{width:100%;}
+    .dropdown-toggle{width:100%;justify-content:space-between;border-bottom:none!important;padding:4px 0;}
+    .dropdown-menu{
+      position:static;transform:none;box-shadow:none;opacity:1;visibility:visible;
+      min-width:0;margin-top:6px;display:none;border-color:var(--line);
+    }
+    .nav-item.open .dropdown-menu{display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="#top" class="logo">
+      <img src="images/logo-circle.svg" alt="D.W.Mendoza — Ferretería Industrial" class="logo-img">
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú">☰</button>
+    <nav id="navMenu">
+      <a href="#quienes-somos">Nosotros</a>
+      <a href="#catalogo">Catálogo</a>
+      <div class="nav-item" id="servicesNavItem">
+        <button class="dropdown-toggle" id="servicesToggle">Servicios <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l5 5 5-5"/></svg></button>
+        <div class="dropdown-menu">
+          <a href="#servicio-tecnico">Servicio técnico<small>Reparación de soldadoras y máquinas eléctricas</small></a>
+          <a href="#visitas-industriales">Visitas industriales<small>Demostración de equipos en tu empresa</small></a>
+        </div>
+      </div>
+      <a href="#como-pedir">Cómo pedir</a>
+      <a href="#contacto">Contacto</a>
+      <a href="admin.html" id="adminLink" style="display:none;">Admin</a>
+      <a href="account.html" id="accountLink" aria-label="Mi cuenta">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:4px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="accountLabel">Ingresar</span>
+      </a>
+      <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6"/></svg>
+        <span class="cart-count" id="cartCount" style="display:none;">0</span>
+      </button>
+      <a class="btn-wsp" id="navWsp" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </nav>
+  </div>
+</header>
+<div class="hazard"></div>
+
+<section class="hero" id="top">
+  <div class="hero-watermark"><img src="images/logo-icon.svg" alt=""></div>
+  <div class="hero-inner">
+    <div>
+      <span class="eyebrow fade-in-up" style="animation-delay:.05s">Godoy Cruz · Mendoza · Distribuidor DeWalt</span>
+      <h1 class="fade-in-up" style="animation-delay:.15s">Equipamos tu trabajo.<br>Impulsamos tu <span class="accent">producción</span>.</h1>
+      <p class="fade-in-up" style="animation-delay:.28s">Amoladoras, taladros, soldadoras y equipamiento industrial de DeWalt, ESAB, Stanley, Lusqtoff y Hamilton. Retirá en el local o pedí con entrega.</p>
+      <div class="hero-cta fade-in-up" style="animation-delay:.4s">
+        <a href="#catalogo" class="btn btn-primary">Ver catálogo</a>
+        <a href="#" id="heroWsp" target="_blank" rel="noopener" class="btn btn-outline">Consultar por WhatsApp</a>
+      </div>
+    </div>
+    <div class="plate fade-in-up" style="animation-delay:.5s">
+      <div class="plate-title">Ficha del local</div>
+      <div class="plate-row"><span class="k">Dirección</span><span>Sarmiento 1499, Godoy Cruz, Mendoza</span></div>
+      <div class="plate-row"><span class="k">Horario</span><span>9:00 a 17:00 hs</span></div>
+      <div class="plate-row"><span class="k">Teléfono</span><span id="plateTel">—</span></div>
+      <div class="plate-row"><span class="k">Modalidad</span><span>Retiro en local o entrega a coordinar</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="brands">
+  <div class="brands-track" id="brandStrip"></div>
+</div>
+
+<section class="about" id="quienes-somos">
+  <div class="wrap">
+    <div class="about-inner">
+      <div class="about-text">
+        <span class="kicker">/ Quiénes somos</span>
+        <h2>No solo vendemos máquinas</h2>
+        <p>En D.W.Mendoza buscamos entender el trabajo de cada cliente para ofrecer la solución que realmente necesita — no solo el producto que tenemos en góndola. Trabajamos con marcas líderes como DeWalt, ESAB, Stanley, Lusqtoff y Hamilton, y acompañamos antes y después de la compra con asesoramiento real, servicio técnico y visitas a tu empresa.</p>
+      </div>
+      <div class="about-values">
+        <div class="value">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2 0 3.5 1.2 4.5 2.5C11.5 5.2 13 4 15 4c4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg></div>
+          <h3>Asesoramiento real</h3>
+          <p>Te ayudamos a elegir el equipo justo para tu trabajo, no el más caro.</p>
+        </div>
+        <div class="value">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg></div>
+          <h3>Marcas de calidad</h3>
+          <p>Distribuidores de DeWalt, ESAB, Stanley, Lusqtoff y Hamilton.</p>
+        </div>
+        <div class="value">
+          <div class="value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 11-5.4 5.4L4 17v3h3l5.3-5.3a4 4 0 015.4-5.4z"/></svg></div>
+          <h3>Soluciones para la industria</h3>
+          <p>Servicio técnico y demostraciones de equipos en tu empresa.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="catalog" id="catalogo">
+  <div class="wrap">
+    <div class="catalog-head">
+      <div>
+        <span class="kicker">/ Catálogo industrial</span>
+        <h2>Catálogo</h2>
+        <p>Elegí una marca, una categoría, o combiná las dos — y consultá o pedí directo por WhatsApp.</p>
+      </div>
+    </div>
+
+    <div class="mobile-filters">
+      <div class="mf-tabs">
+        <button class="mf-tab active" data-tab="brand">Marca</button>
+        <button class="mf-tab" data-tab="cat">Categoría</button>
+      </div>
+      <div class="mobile-cats" id="mobileBrands"></div>
+      <div class="mobile-cats" id="mobileCats" style="display:none;"></div>
+    </div>
+
+    <div class="catalog-layout">
+      <aside class="cat-sidebar">
+        <div class="cs-head">Marca</div>
+        <ul id="brandSidebar"></ul>
+        <div class="cs-head cs-head-2">Categoría</div>
+        <ul id="catSidebar"></ul>
+      </aside>
+
+      <div class="catalog-main">
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Buscar producto (ej: amoladora 4 1/2)">
+          </div>
+          <select id="sortSelect">
+            <option value="default">Orden: relevancia</option>
+            <option value="az">Nombre A-Z</option>
+            <option value="za">Nombre Z-A</option>
+            <option value="brand">Por marca</option>
+          </select>
+        </div>
+
+        <div class="active-filters" id="activeFilters"></div>
+
+        <div class="grid" id="grid"></div>
+        <div class="no-results" id="noResults" style="display:none;">No se encontraron productos con esos filtros.</div>
+        <button class="btn btn-primary load-more" id="loadMore">Ver más productos</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services" id="servicios">
+  <div class="wrap">
+    <div class="services-head">
+      <span class="kicker">/ Más que venta de herramientas</span>
+      <h2>Servicios</h2>
+    </div>
+    <div class="services-grid">
+      <div class="svc-card svc-with-photo" id="servicio-tecnico">
+        <div class="svc-photo">
+          <img src="https://images.pexels.com/photos/3822843/pexels-photo-3822843.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Técnico reparando una herramienta">
+        </div>
+        <div class="svc-industrial-body svc-light-body">
+          <h3>Servicio técnico</h3>
+          <p>Reparación y mantenimiento de soldadoras y máquinas eléctricas de las principales marcas del mercado — DeWalt, Milwaukee, Makita, Bosch y más. Diagnóstico, repuestos y puesta a punto de tu equipo.</p>
+          <button class="btn btn-primary" id="svcTecnicoWsp">Consultar servicio técnico</button>
+        </div>
+      </div>
+
+      <div class="svc-card svc-industrial" id="visitas-industriales">
+        <div class="svc-photo">
+          <img src="images/visitas-industriales.webp" alt="Demostración de equipos industriales">
+        </div>
+        <div class="svc-industrial-body">
+        <h3>Visitas y demostraciones industriales</h3>
+        <p>Coordinamos una visita a tu empresa para demostrar equipos en funcionamiento real, adaptado a tu proceso productivo.</p>
+        <div class="eq-tags">
+          <span>Plasma de corte</span>
+          <span>Soldadora láser</span>
+          <span>MIG</span>
+          <span>TIG</span>
+        </div>
+        <div class="svc-actions">
+          <button class="btn btn-primary" id="svcVisitaWsp">Quiero coordinar mi visita</button>
+          <button class="btn btn-outline" id="svcProbarWsp">Quiero probar un equipo</button>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="como-pedir">
+  <div class="wrap">
+    <h2>Cómo pedir</h2>
+    <div class="step">
+      <span class="num">01</span>
+      <h3>Elegí el producto</h3>
+      <p>Recorré el catálogo por categoría o marca y encontrá lo que necesitás.</p>
+    </div>
+    <div class="step">
+      <span class="num">02</span>
+      <h3>Consultá o pedí</h3>
+      <p>Tocá "Consultar" para hablar con nosotros, o "Pedir" para armar el pedido directo.</p>
+    </div>
+    <div class="step">
+      <span class="num">03</span>
+      <h3>Retirá o recibilo</h3>
+      <p>Coordinamos el retiro en el local de Sarmiento 1499 o la entrega a domicilio.</p>
+    </div>
+  </div>
+</section>
+
+<section class="location" id="ubicacion">
+  <div class="wrap">
+    <div class="location-grid">
+      <div class="location-info">
+        <span class="kicker">/ Encontranos</span>
+        <h2>Cómo llegar</h2>
+        <p class="addr">Sarmiento 1499, Godoy Cruz, Mendoza</p>
+        <p class="hrs">Lun a Vie · 9:00 a 17:00 hs</p>
+        <a class="btn btn-primary" id="directionsBtn" href="#" target="_blank" rel="noopener">Cómo llegar en Google Maps</a>
+      </div>
+      <div class="map-frame">
+        <iframe src="https://www.google.com/maps?q=Sarmiento+1499,+Godoy+Cruz,+Mendoza,+Argentina&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación D.W.Mendoza"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contacto">
+  <div class="wrap">
+    <div>
+      <h3>D.W.Mendoza</h3>
+      <p>Venta de herramientas industriales. Distribuidores de DeWalt, ESAB, Stanley, Lusqtoff y Hamilton en Godoy Cruz, Mendoza.</p>
+    </div>
+    <div>
+      <h3>Contacto</h3>
+      <a id="footTel" href="#">Teléfono / WhatsApp</a>
+      <a id="footMail" href="#">Email</a>
+    </div>
+    <div>
+      <h3>Local</h3>
+      <p>Sarmiento 1499<br>Godoy Cruz, Mendoza</p>
+      <p>Lun a Vie · 9:00 a 17:00 hs</p>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© D.W.MENDOZA — HERRAMIENTAS INDUSTRIALES</span>
+    <span>SITIO EN CONSTRUCCIÓN — VERSIÓN PRELIMINAR</span>
+  </div>
+</footer>
+
+<a class="wsp-float" id="floatWsp" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.3 7.6 9 7c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-1 1-1 2.4s1 2.8 1.1 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.2-.6-.4z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5C8.3 21.5 10.1 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.7 0-3.4-.5-4.8-1.3l-.3-.2-3 .9.9-2.9-.2-.3C3.5 15.1 3 13.6 3 12c0-4.9 4-9 9-9s9 4.1 9 9-4 9-9 9z"/></svg>
+</a>
+
+<div class="modal-overlay" id="detailOverlay">
+  <div class="modal detail-modal">
+    <div class="detail-photo">
+      <img class="prod-thumb" id="detailThumb" src="" alt="" loading="lazy" onerror="this.style.display='none'">
+      <button class="modal-close" id="detailClose" style="color:#F5F3EC;">&times;</button>
+      <span class="brand-tag" id="detailBrandTag">MARCA</span>
+      <span class="ph-label">FOTO PRÓXIMAMENTE</span>
+    </div>
+    <div class="detail-body">
+      <div class="detail-cats" id="detailCats"></div>
+      <h3 class="detail-title" id="detailTitle">Nombre del producto</h3>
+      <p class="detail-desc" id="detailDesc">Descripción</p>
+      <div class="detail-actions">
+        <button class="d-consult" id="detailConsult">Consultar</button>
+        <button class="d-order" id="detailOrder">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cartOverlay">
+  <div class="modal cart-modal">
+    <div class="modal-head">
+      <button class="modal-close" id="cartClose">&times;</button>
+      <h3>Tu pedido</h3>
+      <div class="sub" id="cartCountSub">0 PRODUCTOS</div>
+    </div>
+    <div class="modal-body">
+      <div id="cartItems" class="cart-items"></div>
+      <div id="cartEmpty" class="cart-empty">Todavía no agregaste productos. Buscá en el catálogo y tocá "Agregar".</div>
+
+      <div id="cartCheckout">
+        <label>¿Cómo lo querés recibir?</label>
+        <div class="option-row">
+          <button id="cartOptRetiro" class="sel">Retiro en local</button>
+          <button id="cartOptEntrega">Entrega</button>
+        </div>
+        <label>Tu nombre</label>
+        <input type="text" id="cartName" placeholder="Nombre y apellido">
+        <label>Notas (opcional)</label>
+        <textarea id="cartNotes" placeholder="Dirección de entrega, horario preferido, etc."></textarea>
+        <button class="modal-send" id="cartSend">Enviar pedido por WhatsApp</button>
+        <button class="cart-clear" id="cartClear">Vaciar carrito</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+
+async function dwLoadProductsFromSupabase(){
+  try{
+    const { data, error } = await supabaseClient
+      .from('products')
+      .select('*')
+      .eq('active', true);
+    if (error || !data || !data.length) return false;
+
+    const mapped = data.map(p => ({
+      id: p.id,
+      name: p.name,
+      brand: p.brand || '',
+      categories: p.categories || [],
+      desc: p.description || '',
+      price: p.price,
+      stock: p.stock,
+      image_url: p.image_url || null
+    }));
+
+    PRODUCTS.length = 0;
+    mapped.forEach(p => PRODUCTS.push(p));
+
+    const cats = new Set();
+    const brands = new Set();
+    mapped.forEach(p => { (p.categories||[]).forEach(c=>cats.add(c)); if (p.brand) brands.add(p.brand); });
+    CATEGORIES.length = 0; Array.from(cats).sort().forEach(c=>CATEGORIES.push(c));
+    BRANDS.length = 0; Array.from(brands).sort().forEach(b=>BRANDS.push(b));
+    return true;
+  } catch(e){
+    console.warn('No se pudieron cargar productos desde Supabase, uso el catálogo local.', e);
+    return false;
+  }
+}
+
+function dwProductImage(p){
+  return p.image_url || ('images/productos/' + p.id + '.jpg');
+}
+// ---- Config: business phone (edit here once and it updates everywhere) ----
+const PHONE_DISPLAY = "2615395096";
+const PHONE_WSP = "5492615395096"; // AR mobile format for wa.me
+
+document.getElementById('plateTel').textContent = PHONE_DISPLAY;
+document.getElementById('footTel').textContent = PHONE_DISPLAY;
+document.getElementById('footTel').href = `https://wa.me/${PHONE_WSP}`;
+document.getElementById('directionsBtn').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent('Sarmiento 1499, Godoy Cruz, Mendoza, Argentina');
+
+function wspLink(msg){
+  return `https://wa.me/${PHONE_WSP}?text=${encodeURIComponent(msg)}`;
+}
+const genericMsg = "Hola D.W.Mendoza! Quería hacer una consulta.";
+['navWsp','heroWsp','floatWsp'].forEach(id=>{
+  document.getElementById(id).href = wspLink(genericMsg);
+});
+
+// ---- Services WhatsApp CTAs ----
+document.getElementById('svcTecnicoWsp').addEventListener('click', ()=>{
+  window.open(wspLink("Hola! Quiero consultar por el servicio técnico de soldadoras / máquinas eléctricas."), '_blank');
+});
+document.getElementById('svcVisitaWsp').addEventListener('click', ()=>{
+  window.open(wspLink("Hola! Quiero coordinar una visita industrial para nuestra empresa."), '_blank');
+});
+document.getElementById('svcProbarWsp').addEventListener('click', ()=>{
+  window.open(wspLink("Hola! Quiero probar un equipo (plasma de corte / soldadora láser / MIG / TIG) en una demostración."), '_blank');
+});
+
+// ---- Services dropdown (nav) ----
+const servicesNavItem = document.getElementById('servicesNavItem');
+const servicesToggle = document.getElementById('servicesToggle');
+servicesToggle.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  servicesNavItem.classList.toggle('open');
+});
+document.addEventListener('click', (e)=>{
+  if(!servicesNavItem.contains(e.target)) servicesNavItem.classList.remove('open');
+});
+servicesNavItem.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click', ()=>{
+    servicesNavItem.classList.remove('open');
+    document.getElementById('navMenu').classList.remove('open');
+  });
+});
+
+function boot(){
+
+// ---- Brand strip (non-interactive marquee, duplicated for seamless loop) ----
+const MARQUEE_BRANDS = [...BRANDS, 'Milwaukee', 'Makita', 'Bosch'];
+const brandItems = MARQUEE_BRANDS.map(b=>`<span><b>${b}</b></span>`).join('<span>·</span>');
+document.getElementById('brandStrip').innerHTML = brandItems + '<span>·</span>' + brandItems;
+
+// ---- Filters state ----
+let activeCat = 'Todas';
+let activeBrand = '';
+let searchTerm = '';
+let sortMode = 'default';
+let visibleCount = 24;
+const PAGE_SIZE = 24;
+
+const catSidebarEl = document.getElementById('catSidebar');
+const brandSidebarEl = document.getElementById('brandSidebar');
+const mobileCatsEl = document.getElementById('mobileCats');
+const mobileBrandsEl = document.getElementById('mobileBrands');
+const searchInputEl = document.getElementById('searchInput');
+const sortSelectEl = document.getElementById('sortSelect');
+const activeFiltersEl = document.getElementById('activeFilters');
+const gridEl = document.getElementById('grid');
+const noResultsEl = document.getElementById('noResults');
+const loadMoreBtn = document.getElementById('loadMore');
+
+const catCounts = {};
+CATEGORIES.forEach(c=> catCounts[c] = PRODUCTS.filter(p=>p.categories.includes(c)).length);
+const brandCounts = {};
+BRANDS.forEach(b=> brandCounts[b] = PRODUCTS.filter(p=>p.brand===b).length);
+
+function setCategory(c){
+  activeCat = c;
+  visibleCount = PAGE_SIZE;
+  renderFilterUI();
+  renderGrid();
+}
+function setBrand(b){
+  activeBrand = b;
+  visibleCount = PAGE_SIZE;
+  renderFilterUI();
+  renderGrid();
+}
+
+function renderFilterUI(){
+  const catChips = ['Todas', ...CATEGORIES];
+  const brandChips = ['Todas', ...BRANDS];
+
+  const catChipHTML = c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`;
+  const catSideHTML = c=>`<li><button class="${c===activeCat?'active':''}" data-cat="${c}"><span>${c}</span></button></li>`;
+  const brandChipHTML = b=>`<button class="chip ${b===activeBrand||(b==='Todas'&&!activeBrand)?'active':''}" data-brand="${b}">${b}</button>`;
+  const brandSideHTML = b=>`<li><button class="${b===activeBrand||(b==='Todas'&&!activeBrand)?'active':''}" data-brand="${b}"><span>${b}</span></button></li>`;
+
+  catSidebarEl.innerHTML = catChips.map(catSideHTML).join('');
+  mobileCatsEl.innerHTML = catChips.map(catChipHTML).join('');
+  brandSidebarEl.innerHTML = brandChips.map(brandSideHTML).join('');
+  mobileBrandsEl.innerHTML = brandChips.map(brandChipHTML).join('');
+
+  [...catSidebarEl.querySelectorAll('[data-cat]'), ...mobileCatsEl.querySelectorAll('[data-cat]')].forEach(btn=>{
+    btn.addEventListener('click', ()=> setCategory(btn.dataset.cat));
+  });
+  [...brandSidebarEl.querySelectorAll('[data-brand]'), ...mobileBrandsEl.querySelectorAll('[data-brand]')].forEach(btn=>{
+    btn.addEventListener('click', ()=> setBrand(btn.dataset.brand === 'Todas' ? '' : btn.dataset.brand));
+  });
+
+  const pills = [];
+  if(activeBrand) pills.push({label:activeBrand, clear:()=>setBrand('')});
+  if(activeCat !== 'Todas') pills.push({label:activeCat, clear:()=>setCategory('Todas')});
+  if(searchTerm) pills.push({label:`"${searchTerm}"`, clear:()=>{searchTerm='';searchInputEl.value='';visibleCount=PAGE_SIZE;renderFilterUI();renderGrid();}});
+  activeFiltersEl.innerHTML = pills.map((p,i)=>`<span class="tag-pill">${p.label}<button data-pill="${i}">&times;</button></span>`).join('');
+  activeFiltersEl.querySelectorAll('[data-pill]').forEach((btn,i)=>{
+    btn.addEventListener('click', ()=> pills[i].clear());
+  });
+}
+
+document.querySelectorAll('.mf-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.mf-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    mobileBrandsEl.style.display = tab.dataset.tab === 'brand' ? 'flex' : 'none';
+    mobileCatsEl.style.display = tab.dataset.tab === 'cat' ? 'flex' : 'none';
+  });
+});
+
+let searchDebounce;
+searchInputEl.addEventListener('input', e=>{
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(()=>{
+    searchTerm = e.target.value.trim().toLowerCase();
+    visibleCount = PAGE_SIZE;
+    renderFilterUI();
+    renderGrid();
+  }, 200);
+});
+
+sortSelectEl.addEventListener('change', e=>{
+  sortMode = e.target.value;
+  renderGrid();
+});
+
+function getFiltered(){
+  let list = PRODUCTS.filter(p=>{
+    const catOk = activeCat === 'Todas' || p.categories.includes(activeCat);
+    const brandOk = !activeBrand || p.brand === activeBrand;
+    const searchOk = !searchTerm || p.name.toLowerCase().includes(searchTerm) || p.brand.toLowerCase().includes(searchTerm);
+    return catOk && brandOk && searchOk;
+  });
+  if(sortMode === 'az') list = [...list].sort((a,b)=>a.name.localeCompare(b.name));
+  if(sortMode === 'za') list = [...list].sort((a,b)=>b.name.localeCompare(a.name));
+  if(sortMode === 'brand') list = [...list].sort((a,b)=>a.brand.localeCompare(b.brand) || a.name.localeCompare(b.name));
+  return list;
+}
+
+// Simple monoline wrench+screwdriver icon shared by all placeholders
+const TOOL_ICON = `<svg class="tool-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M31 6c4.4 0 8 3.6 8 8 0 1.5-.4 2.9-1.1 4.1L44 24.2l-4 4-6.1-6.1c-1.2.7-2.6 1.1-4.1 1.1-4.4 0-8-3.6-8-8s3.6-8 8-8z"/>
+  <path d="M6 42l14-14"/><path d="M4 30l6 6"/><path d="M10 44l6-6"/>
+</svg>`;
+
+function cardHTML(p){
+  const desc = p.desc && p.desc.length ? p.desc : 'Consultanos por especificaciones técnicas y disponibilidad de este producto.';
+  return `
+  <div class="card reveal" data-id="${p.id}">
+    <div class="card-photo">
+      <img class="prod-thumb" src="${dwProductImage(p)}" alt="${p.name}" loading="lazy"
+           onerror="this.style.display='none'">
+      <span class="brand-tag">${p.brand}</span>
+      ${TOOL_ICON}
+      <span class="ph-label">Foto próximamente</span>
+      <div class="hover-view">Ver detalle</div>
+    </div>
+    <div class="card-body">
+      <div class="card-cat">${p.categories.join(' · ')}</div>
+      <div class="card-title">${p.name}</div>
+      <div class="card-desc">${desc}</div>
+      <div class="card-actions">
+        <button class="btn-consult" data-consult="${p.id}">Consultar</button>
+        <button class="btn-order" data-order="${p.id}">Agregar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries)=>{
+  entries.forEach((entry, i)=>{
+    if(entry.isIntersecting){
+      entry.target.style.transitionDelay = `${(i%6)*0.06}s`;
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, {threshold:0.12}) : null;
+
+function renderGrid(){
+  const filtered = getFiltered();
+  const toShow = filtered.slice(0, visibleCount);
+  gridEl.innerHTML = toShow.map(cardHTML).join('');
+  noResultsEl.style.display = filtered.length === 0 ? 'block' : 'none';
+  loadMoreBtn.style.display = filtered.length > visibleCount ? 'block' : 'none';
+
+  gridEl.querySelectorAll('[data-consult]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const p = PRODUCTS.find(x=>x.id===btn.dataset.consult);
+      window.open(wspLink(`Hola! Quería consultar por: ${p.name} (${p.brand}).`), '_blank');
+    });
+  });
+  gridEl.querySelectorAll('[data-order]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      addToCart(btn.dataset.order);
+      const original = btn.textContent;
+      btn.textContent = 'Agregado ✓';
+      btn.classList.add('added');
+      setTimeout(()=>{ btn.textContent = original; btn.classList.remove('added'); }, 1100);
+    });
+  });
+  gridEl.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('click', ()=> openDetail(card.dataset.id));
+    if(revealObserver && !prefersReducedMotion){
+      revealObserver.observe(card);
+    } else {
+      card.classList.add('visible');
+    }
+  });
+}
+
+loadMoreBtn.addEventListener('click', ()=>{
+  visibleCount += PAGE_SIZE;
+  renderGrid();
+});
+
+// ---- Cart ----
+let cart = [];
+try{
+  const saved = localStorage.getItem('dwm_cart');
+  if(saved) cart = JSON.parse(saved);
+}catch(e){ cart = []; }
+
+let cartDelivery = 'Retiro en local';
+const cartOverlay = document.getElementById('cartOverlay');
+const cartItemsEl = document.getElementById('cartItems');
+const cartEmptyEl = document.getElementById('cartEmpty');
+const cartCheckoutEl = document.getElementById('cartCheckout');
+const cartCountEl = document.getElementById('cartCount');
+const cartCountSubEl = document.getElementById('cartCountSub');
+const cartOptRetiro = document.getElementById('cartOptRetiro');
+const cartOptEntrega = document.getElementById('cartOptEntrega');
+
+function saveCart(){
+  try{ localStorage.setItem('dwm_cart', JSON.stringify(cart)); }catch(e){}
+}
+
+function addToCart(id, qty=1){
+  const existing = cart.find(c=>c.id===id);
+  if(existing){ existing.qty += qty; }
+  else{
+    const p = PRODUCTS.find(x=>x.id===id);
+    if(!p) return;
+    cart.push({id:p.id, name:p.name, brand:p.brand, qty});
+  }
+  saveCart();
+  renderCartBadge();
+}
+
+function removeFromCart(id){
+  cart = cart.filter(c=>c.id!==id);
+  saveCart();
+  renderCartBadge();
+  renderCartModal();
+}
+
+function changeQty(id, delta){
+  const item = cart.find(c=>c.id===id);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty <= 0){ removeFromCart(id); return; }
+  saveCart();
+  renderCartBadge();
+  renderCartModal();
+}
+
+function totalQty(){
+  return cart.reduce((sum,c)=>sum+c.qty, 0);
+}
+
+function renderCartBadge(){
+  const n = totalQty();
+  cartCountEl.textContent = n;
+  cartCountEl.style.display = n > 0 ? 'flex' : 'none';
+}
+
+function renderCartModal(){
+  cartCountSubEl.textContent = `${totalQty()} PRODUCTO${totalQty()===1?'':'S'}`;
+  if(cart.length === 0){
+    cartItemsEl.style.display = 'none';
+    cartEmptyEl.style.display = 'block';
+    cartCheckoutEl.style.display = 'none';
+    return;
+  }
+  cartItemsEl.style.display = 'block';
+  cartEmptyEl.style.display = 'none';
+  cartCheckoutEl.style.display = 'block';
+  cartItemsEl.innerHTML = cart.map(c=>`
+    <div class="cart-item">
+      <div class="ci-info">
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-brand">${c.brand}</div>
+      </div>
+      <div class="ci-qty">
+        <button data-qty-minus="${c.id}">−</button>
+        <span>${c.qty}</span>
+        <button data-qty-plus="${c.id}">+</button>
+      </div>
+      <button class="ci-remove" data-remove="${c.id}" aria-label="Quitar">&times;</button>
+    </div>
+  `).join('');
+  cartItemsEl.querySelectorAll('[data-qty-minus]').forEach(b=>b.addEventListener('click', ()=>changeQty(b.dataset.qtyMinus,-1)));
+  cartItemsEl.querySelectorAll('[data-qty-plus]').forEach(b=>b.addEventListener('click', ()=>changeQty(b.dataset.qtyPlus,1)));
+  cartItemsEl.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>removeFromCart(b.dataset.remove)));
+}
+
+function openCart(){
+  renderCartModal();
+  cartOverlay.classList.add('open');
+}
+document.getElementById('cartBtn').addEventListener('click', openCart);
+document.getElementById('cartClose').addEventListener('click', ()=> cartOverlay.classList.remove('open'));
+cartOverlay.addEventListener('click', e=>{ if(e.target===cartOverlay) cartOverlay.classList.remove('open'); });
+
+cartOptRetiro.addEventListener('click', ()=>{
+  cartDelivery = 'Retiro en local';
+  cartOptRetiro.classList.add('sel'); cartOptEntrega.classList.remove('sel');
+});
+cartOptEntrega.addEventListener('click', ()=>{
+  cartDelivery = 'Entrega a domicilio (a coordinar)';
+  cartOptEntrega.classList.add('sel'); cartOptRetiro.classList.remove('sel');
+});
+
+document.getElementById('cartClear').addEventListener('click', ()=>{
+  cart = [];
+  saveCart();
+  renderCartBadge();
+  renderCartModal();
+});
+
+document.getElementById('cartSend').addEventListener('click', ()=>{
+  if(cart.length === 0) return;
+  const name = document.getElementById('cartName').value.trim();
+  const notes = document.getElementById('cartNotes').value.trim();
+  let msg = `Hola! Quiero hacer el siguiente pedido:\n`;
+  cart.forEach((c,i)=>{ msg += `${i+1}. ${c.name} (${c.brand}) x${c.qty}\n`; });
+  msg += `Modalidad: ${cartDelivery}.`;
+  if(name) msg += `\nNombre: ${name}.`;
+  if(notes) msg += `\nNotas: ${notes}.`;
+  window.open(wspLink(msg), '_blank');
+  cartOverlay.classList.remove('open');
+});
+
+renderCartBadge();
+
+// ---- Detail modal ----
+const detailOverlay = document.getElementById('detailOverlay');
+let detailProduct = null;
+
+function openDetail(id){
+  detailProduct = PRODUCTS.find(p=>p.id===id);
+  if(!detailProduct) return;
+  document.getElementById('detailBrandTag').textContent = detailProduct.brand;
+  document.getElementById('detailTitle').textContent = detailProduct.name;
+  document.getElementById('detailDesc').textContent =
+    detailProduct.desc && detailProduct.desc.length ? detailProduct.desc
+    : 'Todavía no cargamos la descripción completa de este producto — consultanos y te pasamos todos los detalles técnicos.';
+  document.getElementById('detailCats').innerHTML =
+    detailProduct.categories.map(c=>`<span>${c}</span>`).join('');
+  const thumb = document.getElementById('detailThumb');
+  thumb.style.display = '';
+  thumb.src = dwProductImage(detailProduct);
+  thumb.alt = detailProduct.name;
+  detailOverlay.classList.add('open');
+}
+document.getElementById('detailClose').addEventListener('click', ()=> detailOverlay.classList.remove('open'));
+detailOverlay.addEventListener('click', e=>{ if(e.target===detailOverlay) detailOverlay.classList.remove('open'); });
+
+document.getElementById('detailConsult').addEventListener('click', ()=>{
+  window.open(wspLink(`Hola! Quería consultar por: ${detailProduct.name} (${detailProduct.brand}).`), '_blank');
+});
+document.getElementById('detailOrder').addEventListener('click', ()=>{
+  addToCart(detailProduct.id);
+  const btn = document.getElementById('detailOrder');
+  const original = btn.textContent;
+  btn.textContent = 'Agregado ✓';
+  btn.classList.add('added');
+  setTimeout(()=>{ btn.textContent = original; btn.classList.remove('added'); }, 1100);
+});
+
+
+// ---- Header shadow on scroll ----
+const headerEl = document.querySelector('header');
+window.addEventListener('scroll', ()=>{
+  headerEl.classList.toggle('scrolled', window.scrollY > 12);
+}, {passive:true});
+
+// ---- Scroll-reveal for non-card sections ----
+if(revealObserver && !prefersReducedMotion){
+  document.querySelectorAll('.step, footer .wrap > div').forEach(el=>{
+    el.classList.add('reveal');
+    revealObserver.observe(el);
+  });
+} else {
+  document.querySelectorAll('.step, footer .wrap > div').forEach(el=> el.classList.add('reveal','visible'));
+}
+
+// ---- Nav toggle (mobile) ----
+document.getElementById('navToggle').addEventListener('click', ()=>{
+  document.getElementById('navMenu').classList.toggle('open');
+});
+
+// ---- Init ----
+renderFilterUI();
+renderGrid();
+
+} // fin boot()
+
+(async function dwStart(){
+  await dwLoadProductsFromSupabase();
+  boot();
+})();
+</script>
+
+</body>
+</html>

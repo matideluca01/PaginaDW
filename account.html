@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi cuenta — D.W.Mendoza</title>
+<link rel="icon" href="images/logo-icon.svg">
+<style>
+  :root{
+    --yellow:#FEBD11;
+    --yellow-dark:#E0A400;
+    --black:#111110;
+    --charcoal:#1D1D1B;
+    --charcoal-2:#26251F;
+    --off-white:#F5F3EC;
+    --steel:#8A8A7F;
+    --steel-dark:#55544C;
+    --line:#3A392F;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--off-white);
+    color:var(--black);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{background:var(--black);padding:16px 24px;}
+  header a.logo img{height:40px;display:block;}
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px;}
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px;
+    width:100%;
+    max-width:400px;
+    box-shadow:0 4px 24px rgba(0,0,0,.08);
+  }
+  .card h1{font-size:22px;margin-bottom:6px;}
+  .card p.sub{color:var(--steel-dark);font-size:14px;margin-bottom:24px;}
+  .tabs{display:flex;margin-bottom:24px;border-bottom:2px solid var(--off-white);}
+  .tabs button{
+    flex:1;background:none;border:none;padding:10px;font-size:15px;font-weight:600;
+    color:var(--steel-dark);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;
+  }
+  .tabs button.active{color:var(--black);border-bottom-color:var(--yellow);}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;margin-top:14px;}
+  input{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);
+    font-size:15px;font-family:inherit;
+  }
+  button.submit{
+    width:100%;margin-top:22px;padding:12px;background:var(--yellow);color:var(--black);
+    border:none;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;
+    transition:background .2s;
+  }
+  button.submit:hover{background:var(--yellow-dark);}
+  button.submit:disabled{opacity:.5;cursor:default;}
+  .msg{margin-top:14px;font-size:14px;padding:10px;border-radius:var(--radius);display:none;}
+  .msg.error{background:#fdeaea;color:#a11;display:block;}
+  .msg.ok{background:#e9f7ee;color:#177a3d;display:block;}
+  .session-box{text-align:center;}
+  .session-box p{margin-bottom:6px;}
+  .session-box .role{
+    display:inline-block;background:var(--yellow);color:var(--black);font-weight:700;
+    font-size:12px;padding:3px 10px;border-radius:20px;margin-bottom:20px;text-transform:uppercase;
+  }
+  .btn-secondary{
+    display:inline-block;margin-top:10px;padding:10px 18px;border:1px solid var(--black);
+    border-radius:var(--radius);color:var(--black);text-decoration:none;font-weight:600;font-size:14px;
+  }
+  .btn-out{background:none;border:1px solid var(--line);padding:10px 18px;border-radius:var(--radius);
+    cursor:pointer;font-family:inherit;font-size:14px;margin-top:8px;}
+  a.back{display:inline-block;margin-bottom:16px;color:var(--steel-dark);font-size:13px;text-decoration:none;}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo"><img src="images/logo-circle.svg" alt="D.W.Mendoza"></a>
+</header>
+<main>
+  <div class="card" id="loggedOutCard">
+    <a class="back" href="index.html">&larr; Volver a la página</a>
+    <div class="tabs">
+      <button id="tabLogin" class="active">Ingresar</button>
+      <button id="tabSignup">Crear cuenta</button>
+    </div>
+
+    <form id="loginForm">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" required autocomplete="email">
+      <label for="loginPass">Contraseña</label>
+      <input type="password" id="loginPass" required autocomplete="current-password">
+      <button class="submit" type="submit" id="loginBtn">Ingresar</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+
+    <form id="signupForm" style="display:none;">
+      <label for="suEmail">Email</label>
+      <input type="email" id="suEmail" required autocomplete="email">
+      <label for="suPass">Contraseña</label>
+      <input type="password" id="suPass" required minlength="6" autocomplete="new-password">
+      <button class="submit" type="submit" id="suBtn">Crear cuenta</button>
+      <div class="msg" id="suMsg"></div>
+    </form>
+  </div>
+
+  <div class="card session-box" id="loggedInCard" style="display:none;">
+    <p id="sessionEmail"></p>
+    <span class="role" id="sessionRole"></span>
+    <div>
+      <a href="admin.html" class="btn-secondary" id="goAdminBtn" style="display:none;">Ir al panel de administración</a>
+    </div>
+    <div>
+      <a href="index.html" class="btn-secondary">Ir a la página</a>
+    </div>
+    <div>
+      <button class="btn-out" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<script>
+const tabLogin = document.getElementById('tabLogin');
+const tabSignup = document.getElementById('tabSignup');
+const loginForm = document.getElementById('loginForm');
+const signupForm = document.getElementById('signupForm');
+
+tabLogin.onclick = () => {
+  tabLogin.classList.add('active'); tabSignup.classList.remove('active');
+  loginForm.style.display='block'; signupForm.style.display='none';
+};
+tabSignup.onclick = () => {
+  tabSignup.classList.add('active'); tabLogin.classList.remove('active');
+  signupForm.style.display='block'; loginForm.style.display='none';
+};
+
+function showMsg(el, text, ok){
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'ok' : 'error');
+}
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const { error } = await dwSignIn(email, pass);
+  const msg = document.getElementById('loginMsg');
+  if (error){
+    showMsg(msg, 'No se pudo ingresar: ' + error.message, false);
+    btn.disabled = false;
+  } else {
+    showMsg(msg, 'Ingresaste correctamente.', true);
+    await renderSession();
+  }
+});
+
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('suBtn');
+  btn.disabled = true;
+  const email = document.getElementById('suEmail').value.trim();
+  const pass = document.getElementById('suPass').value;
+  const { error } = await dwSignUp(email, pass);
+  const msg = document.getElementById('suMsg');
+  if (error){
+    showMsg(msg, 'No se pudo crear la cuenta: ' + error.message, false);
+    btn.disabled = false;
+  } else {
+    showMsg(msg, 'Cuenta creada. Si te pide confirmar el email, revisá tu casilla; si no, ya podés ingresar.', true);
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await dwSignOut();
+  await renderSession();
+});
+
+async function renderSession(){
+  const session = await dwGetSession();
+  const loggedOut = document.getElementById('loggedOutCard');
+  const loggedIn = document.getElementById('loggedInCard');
+  if (!session){
+    loggedOut.style.display = 'block';
+    loggedIn.style.display = 'none';
+    return;
+  }
+  const profile = await dwGetProfile();
+  loggedOut.style.display = 'none';
+  loggedIn.style.display = 'block';
+  document.getElementById('sessionEmail').textContent = session.user.email;
+  document.getElementById('sessionRole').textContent = profile ? profile.role : 'cliente';
+  document.getElementById('goAdminBtn').style.display = (profile && profile.role === 'admin') ? 'inline-block' : 'none';
+}
+
+renderSession();
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .word{font-family:'Arial Black','Arial',sans-serif;font-weight:900;}
+      .tag{font-family:'Arial','Helvetica',sans-serif;font-weight:700;}
+    </style>
+  </defs>
+
+  <!-- Black plate background -->
+  <rect x="0" y="0" width="720" height="220" rx="14" fill="#111110"/>
+
+  <!-- Hazard stripe accent, left edge -->
+  <clipPath id="stripeClip"><rect x="0" y="0" width="16" height="220" rx="14"/></clipPath>
+  <g clip-path="url(#stripeClip)">
+    <rect x="0" y="0" width="16" height="220" fill="#111110"/>
+    <g fill="#FEBD11">
+      <polygon points="-10,0 10,0 -20,40 -40,40"/>
+      <polygon points="10,0 30,0 0,40 -20,40"/>
+      <polygon points="30,0 50,0 20,40 0,40"/>
+      <polygon points="-10,40 10,40 -20,80 -40,80"/>
+      <polygon points="10,40 30,40 0,80 -20,80"/>
+      <polygon points="30,40 50,40 20,80 0,80"/>
+      <polygon points="-10,80 10,80 -20,120 -40,120"/>
+      <polygon points="10,80 30,80 0,120 -20,120"/>
+      <polygon points="30,80 50,80 20,120 0,120"/>
+      <polygon points="-10,120 10,120 -20,160 -40,160"/>
+      <polygon points="10,120 30,120 0,160 -20,160"/>
+      <polygon points="30,120 50,120 20,160 0,160"/>
+      <polygon points="-10,160 10,160 -20,200 -40,200"/>
+      <polygon points="10,160 30,160 0,200 -20,200"/>
+      <polygon points="30,160 50,160 20,200 0,200"/>
+      <polygon points="-10,200 10,200 -20,240 -40,240"/>
+      <polygon points="10,200 30,200 0,240 -20,240"/>
+      <polygon points="30,200 50,200 20,240 0,240"/>
+    </g>
+  </g>
+
+  <!-- Gear + wrench mark -->
+  <g transform="translate(56,110)">
+    <circle r="46" fill="none" stroke="#FEBD11" stroke-width="7"/>
+    <g fill="#FEBD11">
+      <rect x="-6" y="-54" width="12" height="16" rx="2"/>
+      <rect x="-6" y="38" width="12" height="16" rx="2"/>
+      <rect x="-54" y="-6" width="16" height="12" rx="2"/>
+      <rect x="38" y="-6" width="16" height="12" rx="2"/>
+      <rect x="-6" y="-54" width="12" height="16" rx="2" transform="rotate(45)"/>
+      <rect x="-6" y="38" width="12" height="16" rx="2" transform="rotate(45)"/>
+      <rect x="-54" y="-6" width="16" height="12" rx="2" transform="rotate(45)"/>
+      <rect x="38" y="-6" width="16" height="12" rx="2" transform="rotate(45)"/>
+    </g>
+    <circle r="30" fill="#111110" stroke="#FEBD11" stroke-width="4"/>
+    <path d="M -12 12 L 14 -14" stroke="#F5F3EC" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="-14" cy="14" r="9" fill="none" stroke="#F5F3EC" stroke-width="6"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(126,0)">
+    <text x="20" y="118" class="word" font-size="70" fill="#F5F3EC">D.W.<tspan fill="#FEBD11">MENDOZA</tspan></text>
+    <rect x="22" y="140" width="560" height="4" fill="#FEBD11"/>
+    <text x="22" y="176" class="tag" font-size="24" letter-spacing="4" fill="#C9C7B8">FERRETERÍA INDUSTRIAL</text>
+  </g>
+</svg>

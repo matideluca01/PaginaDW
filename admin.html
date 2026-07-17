@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de administración — D.W.Mendoza</title>
+<link rel="icon" href="images/logo-icon.svg">
+<style>
+  :root{
+    --yellow:#FEBD11;
+    --yellow-dark:#E0A400;
+    --black:#111110;
+    --charcoal:#1D1D1B;
+    --off-white:#F5F3EC;
+    --steel:#8A8A7F;
+    --steel-dark:#55544C;
+    --line:#3A392F;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--off-white);color:var(--black);font-family:'Inter',sans-serif;line-height:1.5;}
+  header{
+    background:var(--black);padding:14px 24px;display:flex;align-items:center;
+    justify-content:space-between;flex-wrap:wrap;gap:12px;
+  }
+  header a.logo img{height:36px;display:block;}
+  header nav a{color:#fff;text-decoration:none;font-size:14px;margin-left:18px;}
+  header nav a:hover{color:var(--yellow);}
+  main{max-width:1100px;margin:0 auto;padding:24px 16px 60px;}
+  h1{font-size:24px;margin-bottom:4px;}
+  p.sub{color:var(--steel-dark);margin-bottom:24px;font-size:14px;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line);}
+  .tabs button{
+    background:none;border:none;padding:10px 16px;font-size:15px;font-weight:600;cursor:pointer;
+    color:var(--steel-dark);border-bottom:2px solid transparent;margin-bottom:-1px;
+  }
+  .tabs button.active{color:var(--black);border-bottom-color:var(--yellow);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+  input[type=text], input[type=number], input[type=email], select, textarea{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);
+    font-family:inherit;font-size:14px;
+  }
+  textarea{min-height:70px;resize:vertical;}
+  .btn{
+    background:var(--yellow);color:var(--black);border:none;padding:10px 18px;border-radius:var(--radius);
+    font-weight:700;cursor:pointer;font-size:14px;
+  }
+  .btn:hover{background:var(--yellow-dark);}
+  .btn-outline{background:none;border:1px solid var(--black);color:var(--black);padding:9px 16px;border-radius:var(--radius);cursor:pointer;font-size:13px;}
+  .btn-danger{background:none;border:1px solid #a11;color:#a11;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;}
+  table{width:100%;border-collapse:collapse;background:#fff;}
+  th,td{padding:10px;border-bottom:1px solid var(--off-white);text-align:left;font-size:13px;vertical-align:middle;}
+  th{background:var(--black);color:#fff;font-size:12px;text-transform:uppercase;}
+  td img{width:44px;height:44px;object-fit:contain;background:#f2f2ee;border-radius:var(--radius);}
+  .row-actions{display:flex;gap:6px;}
+  .row-actions button{background:none;border:1px solid var(--line);border-radius:var(--radius);padding:5px 10px;cursor:pointer;font-size:12px;}
+  .modal-bg{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;
+    align-items:center;justify-content:center;padding:16px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff;border-radius:var(--radius);padding:26px;width:100%;max-width:520px;max-height:90vh;overflow:auto;}
+  .modal h2{margin-bottom:16px;font-size:18px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:700;margin-bottom:4px;}
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .gate{max-width:480px;margin:80px auto;text-align:center;background:#fff;padding:32px;border-radius:var(--radius);}
+  .msg{margin-top:10px;font-size:13px;padding:8px;border-radius:var(--radius);display:none;}
+  .msg.error{background:#fdeaea;color:#a11;display:block;}
+  .msg.ok{background:#e9f7ee;color:#177a3d;display:block;}
+  .pill{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;}
+  .pill.admin{background:var(--yellow);color:var(--black);}
+  .pill.cliente{background:var(--off-white);color:var(--steel-dark);}
+  .empty{padding:30px;text-align:center;color:var(--steel-dark);}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo"><img src="images/logo-circle.svg" alt="D.W.Mendoza"></a>
+  <nav>
+    <a href="index.html">Ver página</a>
+    <a href="account.html">Mi cuenta</a>
+  </nav>
+</header>
+
+<main>
+  <div id="gateNoAuth" class="gate" style="display:none;">
+    <h2>Necesitás iniciar sesión</h2>
+    <p class="sub">Este panel es solo para administradores.</p>
+    <a href="account.html" class="btn" style="display:inline-block;margin-top:14px;text-decoration:none;">Ir a ingresar</a>
+  </div>
+
+  <div id="gateNoAdmin" class="gate" style="display:none;">
+    <h2>No tenés permisos de administrador</h2>
+    <p class="sub">Tu cuenta está registrada como cliente. Si esperás acceso admin, pedile a un administrador que te lo asigne.</p>
+    <a href="index.html" class="btn-outline" style="display:inline-block;margin-top:14px;text-decoration:none;">Volver a la página</a>
+  </div>
+
+  <div id="adminArea" style="display:none;">
+    <h1>Panel de administración</h1>
+    <p class="sub">Cargá productos, precios, stock, fotos y gestioná usuarios.</p>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="products">Productos</button>
+      <button class="tab-btn" data-tab="users">Usuarios</button>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div class="panel active" id="panel-products">
+      <div class="toolbar">
+        <input type="text" id="productSearch" placeholder="Buscar producto..." style="max-width:280px;">
+        <button class="btn" id="newProductBtn">+ Nuevo producto</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Foto</th><th>Nombre</th><th>Marca</th><th>Precio</th><th>Stock</th><th>Activo</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="productsTbody"></tbody>
+      </table>
+      <div class="empty" id="productsEmpty" style="display:none;">No hay productos cargados todavía.</div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="panel" id="panel-users">
+      <p class="sub">Los usuarios se crean solos al registrarse en <a href="account.html">Mi cuenta</a>. Desde acá les asignás el rol de administrador.</p>
+      <table>
+        <thead><tr><th>Email</th><th>Rol</th><th>Alta</th><th>Acciones</th></tr></thead>
+        <tbody id="usersTbody"></tbody>
+      </table>
+      <div class="empty" id="usersEmpty" style="display:none;">No hay usuarios registrados todavía.</div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal producto -->
+<div class="modal-bg" id="productModalBg">
+  <div class="modal">
+    <h2 id="productModalTitle">Nuevo producto</h2>
+    <form id="productForm">
+      <input type="hidden" id="pId">
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" id="pName" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Marca</label>
+          <input type="text" id="pBrand">
+        </div>
+        <div class="field">
+          <label>Categorías (separadas por coma)</label>
+          <input type="text" id="pCategories" placeholder="Ej: Amoladoras, Herramientas varias">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Precio ($)</label>
+          <input type="number" id="pPrice" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label>Stock</label>
+          <input type="number" id="pStock" min="0" step="1" value="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea id="pDesc"></textarea>
+      </div>
+      <div class="field">
+        <label>Foto del producto</label>
+        <input type="file" id="pImageFile" accept="image/*">
+        <input type="hidden" id="pImageUrl">
+        <img id="pImagePreview" style="max-width:90px;margin-top:8px;display:none;border-radius:2px;">
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="pActive" checked style="width:auto;"> Producto activo (visible en la página)</label>
+      </div>
+      <div class="msg" id="productMsg"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="cancelProductBtn">Cancelar</button>
+        <button type="submit" class="btn" id="saveProductBtn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<script>
+let currentProfile = null;
+let productsCache = [];
+
+async function gate(){
+  const session = await dwGetSession();
+  if (!session){
+    document.getElementById('gateNoAuth').style.display = 'block';
+    return false;
+  }
+  currentProfile = await dwGetProfile();
+  if (!currentProfile || currentProfile.role !== 'admin'){
+    document.getElementById('gateNoAdmin').style.display = 'block';
+    return false;
+  }
+  document.getElementById('adminArea').style.display = 'block';
+  return true;
+}
+
+// --- Tabs ---
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'users') loadUsers();
+  });
+});
+
+// --- Productos ---
+function slugify(text){
+  return text.toString().toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
+async function loadProducts(){
+  const { data, error } = await supabaseClient.from('products').select('*').order('created_at', {ascending:false});
+  if (error){ console.error(error); return; }
+  productsCache = data || [];
+  renderProductsTable();
+}
+
+function renderProductsTable(filter){
+  const tbody = document.getElementById('productsTbody');
+  const empty = document.getElementById('productsEmpty');
+  const term = (filter || '').toLowerCase();
+  const list = productsCache.filter(p => !term || p.name.toLowerCase().includes(term));
+  tbody.innerHTML = '';
+  empty.style.display = list.length ? 'none' : 'block';
+  list.forEach(p=>{
+    const tr = document.createElement('tr');
+    const img = p.image_url || ('images/productos/' + p.id + '.jpg');
+    tr.innerHTML = `
+      <td><img src="${img}" onerror="this.style.opacity=0.2" alt=""></td>
+      <td>${p.name}</td>
+      <td>${p.brand || ''}</td>
+      <td>${p.price != null ? '$' + Number(p.price).toLocaleString('es-AR') : '—'}</td>
+      <td>${p.stock ?? 0}</td>
+      <td>${p.active === false ? 'No' : 'Sí'}</td>
+      <td class="row-actions">
+        <button data-edit="${p.id}">Editar</button>
+        <button data-del="${p.id}">Borrar</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-edit]').forEach(b=> b.onclick = ()=> openProductModal(b.dataset.edit));
+  tbody.querySelectorAll('[data-del]').forEach(b=> b.onclick = ()=> deleteProduct(b.dataset.del));
+}
+
+document.getElementById('productSearch').addEventListener('input', (e)=> renderProductsTable(e.target.value));
+
+function openProductModal(id){
+  const p = id ? productsCache.find(x=>x.id===id) : null;
+  document.getElementById('productModalTitle').textContent = p ? 'Editar producto' : 'Nuevo producto';
+  document.getElementById('pId').value = p ? p.id : '';
+  document.getElementById('pName').value = p ? p.name : '';
+  document.getElementById('pBrand').value = p ? (p.brand||'') : '';
+  document.getElementById('pCategories').value = p ? (p.categories||[]).join(', ') : '';
+  document.getElementById('pPrice').value = p && p.price != null ? p.price : '';
+  document.getElementById('pStock').value = p ? (p.stock ?? 0) : 0;
+  document.getElementById('pDesc').value = p ? (p.description||'') : '';
+  document.getElementById('pImageUrl').value = p ? (p.image_url||'') : '';
+  document.getElementById('pImageFile').value = '';
+  const preview = document.getElementById('pImagePreview');
+  if (p && p.image_url){ preview.src = p.image_url; preview.style.display='block'; } else { preview.style.display='none'; }
+  document.getElementById('pActive').checked = p ? p.active !== false : true;
+  document.getElementById('productMsg').style.display='none';
+  document.getElementById('productModalBg').classList.add('show');
+}
+document.getElementById('newProductBtn').onclick = ()=> openProductModal(null);
+document.getElementById('cancelProductBtn').onclick = ()=> document.getElementById('productModalBg').classList.remove('show');
+
+document.getElementById('pImageFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  const preview = document.getElementById('pImagePreview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+});
+
+document.getElementById('productForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('productMsg');
+  const saveBtn = document.getElementById('saveProductBtn');
+  saveBtn.disabled = true;
+  try{
+    const existingId = document.getElementById('pId').value;
+    const name = document.getElementById('pName').value.trim();
+    const id = existingId || (slugify(name) + '-' + Math.random().toString(36).slice(2,7));
+    const categories = document.getElementById('pCategories').value.split(',').map(s=>s.trim()).filter(Boolean);
+    let imageUrl = document.getElementById('pImageUrl').value || null;
+
+    const file = document.getElementById('pImageFile').files[0];
+    if (file){
+      const path = id + '-' + Date.now() + '.' + file.name.split('.').pop();
+      const { error: upErr } = await supabaseClient.storage.from('product-images').upload(path, file, { upsert:true });
+      if (upErr) throw upErr;
+      const { data: pub } = supabaseClient.storage.from('product-images').getPublicUrl(path);
+      imageUrl = pub.publicUrl;
+    }
+
+    const payload = {
+      id,
+      name,
+      brand: document.getElementById('pBrand').value.trim(),
+      categories,
+      description: document.getElementById('pDesc').value.trim(),
+      price: document.getElementById('pPrice').value === '' ? null : Number(document.getElementById('pPrice').value),
+      stock: Number(document.getElementById('pStock').value || 0),
+      image_url: imageUrl,
+      active: document.getElementById('pActive').checked,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabaseClient.from('products').upsert(payload);
+    if (error) throw error;
+
+    msg.className = 'msg ok'; msg.style.display='block'; msg.textContent = 'Producto guardado.';
+    await loadProducts();
+    setTimeout(()=> document.getElementById('productModalBg').classList.remove('show'), 500);
+  } catch(err){
+    msg.className = 'msg error'; msg.style.display='block'; msg.textContent = 'Error: ' + err.message;
+  } finally {
+    saveBtn.disabled = false;
+  }
+});
+
+async function deleteProduct(id){
+  if (!confirm('¿Seguro que querés borrar este producto?')) return;
+  const { error } = await supabaseClient.from('products').delete().eq('id', id);
+  if (error){ alert('No se pudo borrar: ' + error.message); return; }
+  await loadProducts();
+}
+
+// --- Usuarios ---
+async function loadUsers(){
+  const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', {ascending:false});
+  const tbody = document.getElementById('usersTbody');
+  const empty = document.getElementById('usersEmpty');
+  if (error){ console.error(error); return; }
+  tbody.innerHTML = '';
+  empty.style.display = (data && data.length) ? 'none' : 'block';
+  (data||[]).forEach(u=>{
+    const tr = document.createElement('tr');
+    const date = u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '';
+    tr.innerHTML = `
+      <td>${u.email}</td>
+      <td><span class="pill ${u.role}">${u.role}</span></td>
+      <td>${date}</td>
+      <td class="row-actions"></td>`;
+    const actionsTd = tr.querySelector('.row-actions');
+    if (u.id !== currentProfile.id){
+      const btn = document.createElement('button');
+      btn.textContent = u.role === 'admin' ? 'Quitar admin' : 'Hacer admin';
+      btn.onclick = async ()=>{
+        const newRole = u.role === 'admin' ? 'cliente' : 'admin';
+        const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', u.id);
+        if (error){ alert('No se pudo cambiar el rol: ' + error.message); return; }
+        loadUsers();
+      };
+      actionsTd.appendChild(btn);
+    } else {
+      actionsTd.textContent = '(vos)';
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+(async function boot(){
+  const ok = await gate();
+  if (ok) await loadProducts();
+})();
+</script>
+</body>
+</html>
