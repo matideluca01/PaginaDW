@@ -76,6 +76,12 @@
   .pill.admin{background:var(--yellow);color:var(--black);}
   .pill.cliente{background:var(--off-white);color:var(--steel-dark);}
   .empty{padding:30px;text-align:center;color:var(--steel-dark);}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .stat-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 18px;min-width:110px;}
+  .stat-card .num{font-size:24px;font-weight:700;line-height:1;}
+  .stat-card .lbl{font-size:11px;color:var(--steel-dark);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+  .stat-card.warn .num{color:#a11;}
+  select[multiple]{height:auto;min-height:110px;}
 </style>
 </head>
 <body>
@@ -105,15 +111,35 @@
     <p class="sub">Cargá productos, precios, stock, fotos y gestioná usuarios.</p>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="products">Productos</button>
+      <button class="tab-btn active" data-tab="inquiries">Consultas</button>
+      <button class="tab-btn" data-tab="products">Productos</button>
       <button class="tab-btn" data-tab="users">Usuarios</button>
     </div>
 
+    <!-- CONSULTAS -->
+    <div class="panel active" id="panel-inquiries">
+      <p class="sub">Consultas hechas por clientes desde la página (producto, pedido, empresas, servicio técnico, etc).</p>
+      <table>
+        <thead>
+          <tr><th>Fecha</th><th>Tipo</th><th>Contacto</th><th>Mensaje</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="inquiriesTbody"></tbody>
+      </table>
+      <div class="empty" id="inquiriesEmpty" style="display:none;">No hay consultas todavía.</div>
+    </div>
+
     <!-- PRODUCTOS -->
-    <div class="panel active" id="panel-products">
+    <div class="panel" id="panel-products">
+      <div class="stats" id="productStats"></div>
       <div class="toolbar">
-        <input type="text" id="productSearch" placeholder="Buscar producto..." style="max-width:280px;">
-        <button class="btn" id="newProductBtn">+ Nuevo producto</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="productSearch" placeholder="Buscar producto..." style="max-width:280px;">
+          <select id="productBrandFilter" style="max-width:200px;"><option value="">Todas las marcas</option></select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-outline" id="importExcelBtn">Importar desde Excel</button>
+          <button class="btn" id="newProductBtn">+ Nuevo producto</button>
+        </div>
       </div>
       <table>
         <thead>
@@ -149,11 +175,12 @@
       <div class="field-row">
         <div class="field">
           <label>Marca</label>
-          <input type="text" id="pBrand">
+          <input type="text" id="pBrand" list="brandListOptions" placeholder="Elegí o escribí una marca nueva">
+          <datalist id="brandListOptions"></datalist>
         </div>
         <div class="field">
-          <label>Categorías (separadas por coma)</label>
-          <input type="text" id="pCategories" placeholder="Ej: Amoladoras, Herramientas varias">
+          <label>Categorías (Ctrl/Cmd + clic para elegir varias)</label>
+          <select id="pCategories" multiple size="6"></select>
         </div>
       </div>
       <div class="field-row">
@@ -188,9 +215,41 @@
   </div>
 </div>
 
+<!-- Modal importar Excel -->
+<div class="modal-bg" id="importModalBg">
+  <div class="modal" style="max-width:720px;">
+    <h2>Importar productos desde Excel</h2>
+    <p class="sub">
+      Subí un archivo .xlsx, .xls o .csv con columnas: <b>nombre</b>, <b>marca</b>, <b>categorias</b>
+      (opcional — si la dejás vacía se detecta sola por el nombre), <b>precio</b>, <b>stock</b>,
+      <b>descripcion</b> e <b>imagen_url</b> (opcional).
+    </p>
+    <p style="margin-bottom:14px;"><a href="#" id="downloadTemplateLink">Descargar planilla de ejemplo</a></p>
+    <div class="field">
+      <input type="file" id="importFile" accept=".xlsx,.xls,.csv">
+    </div>
+    <div id="importPreviewWrap" style="display:none;">
+      <p class="sub" id="importSummary"></p>
+      <div style="max-height:300px;overflow:auto;border:1px solid var(--line);">
+        <table>
+          <thead><tr><th>Nombre</th><th>Marca</th><th>Categorías</th><th>Precio</th><th>Stock</th></tr></thead>
+          <tbody id="importPreviewTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="msg" id="importMsg"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" id="cancelImportBtn">Cancelar</button>
+      <button type="button" class="btn" id="confirmImportBtn" disabled>Importar productos</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="supabase-config.js"></script>
 <script src="auth.js"></script>
+<script src="data.js"></script>
 <script>
 let currentProfile = null;
 let productsCache = [];
@@ -218,8 +277,59 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'users') loadUsers();
+    if (btn.dataset.tab === 'inquiries') loadInquiries();
   });
 });
+
+// --- Consultas ---
+const INQUIRY_TIPO_LABELS = {
+  producto:'Producto', pedido:'Pedido', empresa:'Empresa',
+  servicio_tecnico:'Servicio técnico', visita_industrial:'Visita industrial',
+  probar_equipo:'Probar equipo', otro:'Otro'
+};
+
+async function loadInquiries(){
+  const { data, error } = await supabaseClient.from('inquiries').select('*').order('created_at', {ascending:false});
+  const tbody = document.getElementById('inquiriesTbody');
+  const empty = document.getElementById('inquiriesEmpty');
+  if (error){ console.error(error); return; }
+  tbody.innerHTML = '';
+  empty.style.display = (data && data.length) ? 'none' : 'block';
+  (data||[]).forEach(i=>{
+    const tr = document.createElement('tr');
+    const fecha = i.created_at ? new Date(i.created_at).toLocaleString('es-AR', { dateStyle:'short', timeStyle:'short' }) : '';
+    const contacto = [i.contacto_nombre, i.contacto_medio].filter(Boolean).join(' · ') || '—';
+    const mensaje = [i.producto_nombre, i.mensaje].filter(Boolean).join(' — ') || '—';
+    tr.innerHTML = `
+      <td>${fecha}</td>
+      <td>${INQUIRY_TIPO_LABELS[i.tipo] || i.tipo}</td>
+      <td>${contacto}</td>
+      <td>${mensaje}</td>
+      <td><span class="pill ${i.estado === 'atendida' ? 'admin' : 'cliente'}">${i.estado}</span></td>
+      <td class="row-actions">
+        <button data-toggle-inquiry="${i.id}">${i.estado === 'nueva' ? 'Marcar atendida' : 'Marcar nueva'}</button>
+        <button data-del-inquiry="${i.id}">Borrar</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-toggle-inquiry]').forEach(b=> b.onclick = ()=> toggleInquiryEstado(b.dataset.toggleInquiry));
+  tbody.querySelectorAll('[data-del-inquiry]').forEach(b=> b.onclick = ()=> deleteInquiry(b.dataset.delInquiry));
+}
+
+async function toggleInquiryEstado(id){
+  const { data } = await supabaseClient.from('inquiries').select('estado').eq('id', id).single();
+  const nuevoEstado = data && data.estado === 'nueva' ? 'atendida' : 'nueva';
+  const { error } = await supabaseClient.from('inquiries').update({ estado: nuevoEstado }).eq('id', id);
+  if (error){ alert('No se pudo actualizar: ' + error.message); return; }
+  loadInquiries();
+}
+
+async function deleteInquiry(id){
+  if (!confirm('¿Seguro que querés borrar esta consulta?')) return;
+  const { error } = await supabaseClient.from('inquiries').delete().eq('id', id);
+  if (error){ alert('No se pudo borrar: ' + error.message); return; }
+  loadInquiries();
+}
 
 // --- Productos ---
 function slugify(text){
@@ -233,16 +343,64 @@ async function loadProducts(){
   if (error){ console.error(error); return; }
   productsCache = data || [];
   renderProductsTable();
+  renderProductStats();
+  populateProductOptions();
+}
+
+function renderProductStats(){
+  const total = productsCache.length;
+  const conFoto = productsCache.filter(p=>p.image_url).length;
+  const sinFoto = total - conFoto;
+  const activos = productsCache.filter(p=>p.active !== false).length;
+  const inactivos = total - activos;
+  document.getElementById('productStats').innerHTML = `
+    <div class="stat-card"><div class="num">${total}</div><div class="lbl">Productos</div></div>
+    <div class="stat-card"><div class="num">${conFoto}</div><div class="lbl">Con foto</div></div>
+    <div class="stat-card ${sinFoto ? 'warn' : ''}"><div class="num">${sinFoto}</div><div class="lbl">Sin foto</div></div>
+    <div class="stat-card"><div class="num">${activos}</div><div class="lbl">Activos (visibles en la página)</div></div>
+    <div class="stat-card"><div class="num">${inactivos}</div><div class="lbl">Inactivos (ocultos)</div></div>
+  `;
+}
+
+// Junta las marcas/categorías fijas de data.js con las que ya estén usadas en productos,
+// para poblar los desplegables del modal de carga/edición.
+function populateProductOptions(){
+  const staticBrands = typeof BRANDS !== 'undefined' ? BRANDS.slice() : [];
+  const dbBrands = productsCache.map(p=>p.brand).filter(Boolean);
+  const allBrands = Array.from(new Set([...staticBrands, ...dbBrands])).sort((a,b)=>a.localeCompare(b));
+  document.getElementById('brandListOptions').innerHTML = allBrands.map(b=>`<option value="${b}">`).join('');
+
+  const brandFilterEl = document.getElementById('productBrandFilter');
+  const prevBrandFilter = brandFilterEl.value;
+  brandFilterEl.innerHTML = '<option value="">Todas las marcas</option>' + allBrands.map(b=>`<option value="${b}">${b}</option>`).join('');
+  if (allBrands.includes(prevBrandFilter)) brandFilterEl.value = prevBrandFilter;
+
+  const staticCats = typeof CATEGORIES !== 'undefined' ? CATEGORIES.slice() : [];
+  const dbCats = productsCache.flatMap(p=>p.categories||[]);
+  const allCats = Array.from(new Set([...staticCats, ...dbCats])).sort((a,b)=>a.localeCompare(b));
+  document.getElementById('pCategories').innerHTML = allCats.map(c=>`<option value="${c}">${c}</option>`).join('');
 }
 
 function renderProductsTable(filter){
   const tbody = document.getElementById('productsTbody');
   const empty = document.getElementById('productsEmpty');
-  const term = (filter || '').toLowerCase();
-  const list = productsCache.filter(p => !term || p.name.toLowerCase().includes(term));
+  const term = (filter != null ? filter : document.getElementById('productSearch').value || '').toLowerCase();
+  const brandFilter = document.getElementById('productBrandFilter').value;
+  const list = productsCache
+    .filter(p => (!term || p.name.toLowerCase().includes(term)) && (!brandFilter || p.brand === brandFilter))
+    .sort((a,b)=> (a.brand||'').localeCompare(b.brand||'') || (a.name||'').localeCompare(b.name||''));
   tbody.innerHTML = '';
   empty.style.display = list.length ? 'none' : 'block';
+  let lastBrand = null;
   list.forEach(p=>{
+    const brandLabel = p.brand || 'Sin marca';
+    if (brandLabel !== lastBrand){
+      lastBrand = brandLabel;
+      const count = list.filter(x => (x.brand || 'Sin marca') === brandLabel).length;
+      const trh = document.createElement('tr');
+      trh.innerHTML = `<td colspan="7" style="background:var(--off-white);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;">${brandLabel} (${count})</td>`;
+      tbody.appendChild(trh);
+    }
     const tr = document.createElement('tr');
     const img = p.image_url || ('images/productos/' + p.id + '.jpg');
     tr.innerHTML = `
@@ -263,14 +421,32 @@ function renderProductsTable(filter){
 }
 
 document.getElementById('productSearch').addEventListener('input', (e)=> renderProductsTable(e.target.value));
+document.getElementById('productBrandFilter').addEventListener('change', ()=> renderProductsTable());
+
+let categoriesTouchedByUser = false;
+
+// Sugiere categorías según palabras clave en el nombre, sin pisar una selección manual ni al editar un producto existente.
+document.getElementById('pName').addEventListener('input', (e)=>{
+  if (document.getElementById('pId').value) return;
+  if (categoriesTouchedByUser) return;
+  if (typeof dwGuessCategories !== 'function') return;
+  const guessed = dwGuessCategories(e.target.value);
+  if (!guessed.length) return;
+  const catSelect = document.getElementById('pCategories');
+  Array.from(catSelect.options).forEach(opt => opt.selected = guessed.includes(opt.value));
+});
+document.getElementById('pCategories').addEventListener('mousedown', ()=> categoriesTouchedByUser = true);
 
 function openProductModal(id){
   const p = id ? productsCache.find(x=>x.id===id) : null;
+  categoriesTouchedByUser = false;
   document.getElementById('productModalTitle').textContent = p ? 'Editar producto' : 'Nuevo producto';
   document.getElementById('pId').value = p ? p.id : '';
   document.getElementById('pName').value = p ? p.name : '';
   document.getElementById('pBrand').value = p ? (p.brand||'') : '';
-  document.getElementById('pCategories').value = p ? (p.categories||[]).join(', ') : '';
+  const catSelect = document.getElementById('pCategories');
+  const productCats = p ? (p.categories||[]) : [];
+  Array.from(catSelect.options).forEach(opt=> opt.selected = productCats.includes(opt.value));
   document.getElementById('pPrice').value = p && p.price != null ? p.price : '';
   document.getElementById('pStock').value = p ? (p.stock ?? 0) : 0;
   document.getElementById('pDesc').value = p ? (p.description||'') : '';
@@ -302,7 +478,7 @@ document.getElementById('productForm').addEventListener('submit', async (e)=>{
     const existingId = document.getElementById('pId').value;
     const name = document.getElementById('pName').value.trim();
     const id = existingId || (slugify(name) + '-' + Math.random().toString(36).slice(2,7));
-    const categories = document.getElementById('pCategories').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const categories = Array.from(document.getElementById('pCategories').selectedOptions).map(o=>o.value);
     let imageUrl = document.getElementById('pImageUrl').value || null;
 
     const file = document.getElementById('pImageFile').files[0];
@@ -347,6 +523,128 @@ async function deleteProduct(id){
   await loadProducts();
 }
 
+// --- Importar productos desde Excel ---
+let importRows = [];
+
+function normHeader(h){
+  return (h||'').toString().toLowerCase().trim()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+
+const IMPORT_HEADER_MAP = {
+  nombre:'name', name:'name',
+  marca:'brand', brand:'brand',
+  categoria:'categories', categorias:'categories', category:'categories', categories:'categories',
+  precio:'price', price:'price',
+  stock:'stock',
+  descripcion:'description', description:'description', desc:'description',
+  imagen_url:'image_url', imagenurl:'image_url', imagen:'image_url', image:'image_url', image_url:'image_url'
+};
+
+document.getElementById('importExcelBtn').onclick = ()=>{
+  importRows = [];
+  document.getElementById('importFile').value = '';
+  document.getElementById('importPreviewWrap').style.display = 'none';
+  document.getElementById('importMsg').style.display = 'none';
+  document.getElementById('confirmImportBtn').disabled = true;
+  document.getElementById('importModalBg').classList.add('show');
+};
+document.getElementById('cancelImportBtn').onclick = ()=> document.getElementById('importModalBg').classList.remove('show');
+
+document.getElementById('downloadTemplateLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['nombre', 'marca', 'categorias', 'precio', 'stock', 'descripcion', 'imagen_url'],
+    ['Amoladora angular 900W', 'Bosch', '', 15000, 5, 'Amoladora angular profesional', '']
+  ]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Productos');
+  XLSX.writeFile(wb, 'plantilla-productos.xlsx');
+});
+
+document.getElementById('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  const msg = document.getElementById('importMsg');
+  msg.style.display = 'none';
+  document.getElementById('importPreviewWrap').style.display = 'none';
+  document.getElementById('confirmImportBtn').disabled = true;
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+    if (!rows.length) throw new Error('El archivo no tiene filas de datos.');
+
+    importRows = rows.map(row=>{
+      const obj = {};
+      Object.keys(row).forEach(k=>{
+        const mapped = IMPORT_HEADER_MAP[normHeader(k)];
+        if (mapped) obj[mapped] = row[k];
+      });
+      const name = (obj.name || '').toString().trim();
+      if (!name) return null;
+
+      let categories = [];
+      if (obj.categories){
+        categories = obj.categories.toString().split(/[,;/]/)
+          .map(c => dwMatchCanonicalCategory(c))
+          .filter(Boolean);
+      }
+      if (!categories.length) categories = dwGuessCategories(name);
+
+      return {
+        id: slugify(name) + '-' + Math.random().toString(36).slice(2,7),
+        name,
+        brand: (obj.brand||'').toString().trim(),
+        categories,
+        description: (obj.description||'').toString().trim(),
+        price: obj.price === '' || obj.price == null ? null : Number(obj.price),
+        stock: obj.stock === '' || obj.stock == null ? 0 : Number(obj.stock),
+        image_url: (obj.image_url||'').toString().trim() || null,
+        active: true,
+        updated_at: new Date().toISOString()
+      };
+    }).filter(Boolean);
+
+    if (!importRows.length) throw new Error('Ninguna fila tiene la columna "nombre" completa.');
+
+    document.getElementById('importSummary').textContent = `${importRows.length} producto(s) listos para importar.`;
+    document.getElementById('importPreviewTbody').innerHTML = importRows.map(r=>`
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.brand || '—'}</td>
+        <td>${r.categories.join(', ') || '<span style="color:#a11">sin categoría</span>'}</td>
+        <td>${r.price != null ? '$' + Number(r.price).toLocaleString('es-AR') : '—'}</td>
+        <td>${r.stock}</td>
+      </tr>`).join('');
+    document.getElementById('importPreviewWrap').style.display = 'block';
+    document.getElementById('confirmImportBtn').disabled = false;
+  } catch(err){
+    msg.className = 'msg error'; msg.style.display = 'block'; msg.textContent = 'Error al leer el archivo: ' + err.message;
+  }
+});
+
+document.getElementById('confirmImportBtn').onclick = async ()=>{
+  const btn = document.getElementById('confirmImportBtn');
+  const msg = document.getElementById('importMsg');
+  btn.disabled = true;
+  try{
+    const CHUNK = 300;
+    for (let i = 0; i < importRows.length; i += CHUNK){
+      const { error } = await supabaseClient.from('products').upsert(importRows.slice(i, i + CHUNK));
+      if (error) throw error;
+    }
+    msg.className = 'msg ok'; msg.style.display = 'block';
+    msg.textContent = `Se importaron ${importRows.length} producto(s) correctamente.`;
+    await loadProducts();
+    setTimeout(()=> document.getElementById('importModalBg').classList.remove('show'), 900);
+  } catch(err){
+    msg.className = 'msg error'; msg.style.display = 'block'; msg.textContent = 'Error al importar: ' + err.message;
+    btn.disabled = false;
+  }
+};
+
 // --- Usuarios ---
 async function loadUsers(){
   const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', {ascending:false});
@@ -383,7 +681,7 @@ async function loadUsers(){
 
 (async function boot(){
   const ok = await gate();
-  if (ok) await loadProducts();
+  if (ok) await Promise.all([loadInquiries(), loadProducts()]);
 })();
 </script>
 </body>
