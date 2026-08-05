@@ -390,15 +390,14 @@
     font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.2em;
     color:var(--yellow-dark);text-transform:uppercase;display:block;margin-bottom:8px;
   }
-  .services-head h2{font-size:32px;}
-  .services-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:24px;align-items:stretch;}
+  .services-head h2{font-size:36px;}
+  .services-intro{font-size:16px;color:var(--steel-dark);max-width:56ch;margin-top:10px;line-height:1.6;}
+  .services-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;}
 
   .svc-card{
     background:#fff;border:1px solid var(--line);border-radius:var(--radius);
     padding:30px;display:flex;flex-direction:column;scroll-margin-top:100px;
   }
-  .svc-card.svc-with-photo{padding:0;overflow:hidden;}
-  .svc-card.svc-with-photo .svc-photo{background:#1D1D1B;}
   .svc-icon{
     width:48px;height:48px;border:2px solid var(--black);border-radius:50%;
     display:flex;align-items:center;justify-content:center;margin-bottom:20px;
@@ -836,16 +835,25 @@
     <div class="services-head">
       <span class="kicker">/ Más que venta de herramientas</span>
       <h2>Servicios</h2>
+      <p class="services-intro">Dos formas de acompañarte más allá de la venta: reparamos lo que ya tenés, y te mostramos en vivo lo que podés sumar.</p>
     </div>
     <div class="services-grid">
-      <div class="svc-card svc-with-photo" id="servicio-tecnico">
+      <div class="svc-card svc-industrial" id="servicio-tecnico">
         <div class="svc-photo">
           <img src="https://images.pexels.com/photos/3822843/pexels-photo-3822843.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Técnico reparando una herramienta">
         </div>
-        <div class="svc-industrial-body svc-light-body">
+        <div class="svc-industrial-body">
           <h3>Servicio técnico</h3>
-          <p>Reparación y mantenimiento de soldadoras y máquinas eléctricas de las principales marcas del mercado — DeWalt, Milwaukee, Makita, Bosch y más. Diagnóstico, repuestos y puesta a punto de tu equipo.</p>
-          <button class="btn btn-primary" id="svcTecnicoWsp">Consultar servicio técnico</button>
+          <p>Reparación y mantenimiento de soldadoras y máquinas eléctricas de las principales marcas del mercado. Diagnóstico, repuestos y puesta a punto de tu equipo.</p>
+          <div class="eq-tags">
+            <span>DeWalt</span>
+            <span>Milwaukee</span>
+            <span>Makita</span>
+            <span>Bosch</span>
+          </div>
+          <div class="svc-actions">
+            <button class="btn btn-primary" id="svcTecnicoWsp">Consultar servicio técnico</button>
+          </div>
         </div>
       </div>
 
@@ -1083,8 +1091,8 @@ let activeCat = 'Todas';
 let activeBrand = '';
 let searchTerm = '';
 let sortMode = 'default';
-let visibleCount = 24;
-const PAGE_SIZE = 24;
+let visibleCount = 12;
+const PAGE_SIZE = 12;
 
 const catSidebarEl = document.getElementById('catSidebar');
 const brandSidebarEl = document.getElementById('brandSidebar');
