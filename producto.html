@@ -118,6 +118,11 @@
     font-size:15px;font-weight:700;color:var(--yellow-dark);text-transform:uppercase;letter-spacing:0.05em;
   }
   .product-desc{font-size:15px;color:var(--steel-dark);line-height:1.8;margin-bottom:28px;white-space:pre-line;}
+  .product-pdf-link{
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;font-size:13px;font-weight:700;
+    color:var(--black);text-decoration:none;border-bottom:2px solid var(--yellow);padding-bottom:2px;
+  }
+  .product-pdf-link:hover{color:var(--yellow-dark);}
   .product-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;}
   .product-actions .btn{flex:1;min-width:210px;}
 
@@ -230,6 +235,7 @@
       <h1 id="pTitle"></h1>
       <div class="product-price" id="pPrice"></div>
       <p class="product-desc" id="pDesc"></p>
+      <a id="pPdfLink" href="#" target="_blank" rel="noopener" class="product-pdf-link" style="display:none;">Descargar ficha técnica (PDF)</a>
       <div class="product-actions">
         <button class="btn btn-outline" id="pConsult">Consultar por WhatsApp</button>
         <button class="btn btn-primary" id="pAdd">Agregar al carrito</button>
@@ -364,6 +370,14 @@ function relatedCardHTML(p){
     ? product.desc
     : 'Todavía no cargamos la descripción completa de este producto — consultanos y te pasamos todos los detalles técnicos.';
   document.getElementById('pCats').innerHTML = product.categories.map(c=>`<span>${c}</span>`).join('');
+
+  const pdfLink = document.getElementById('pPdfLink');
+  if (product.datasheet_url){
+    pdfLink.href = product.datasheet_url;
+    pdfLink.style.display = 'inline-flex';
+  } else {
+    pdfLink.style.display = 'none';
+  }
 
   const img = document.getElementById('pImg');
   img.style.display = '';
