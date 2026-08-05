@@ -112,7 +112,11 @@
     letter-spacing:0.08em;color:var(--steel-dark);border:1px solid var(--line);
     padding:4px 10px;border-radius:14px;
   }
-  .product-info h1{font-size:clamp(24px,3vw,34px);line-height:1.15;margin-bottom:20px;}
+  .product-info h1{font-size:clamp(24px,3vw,34px);line-height:1.15;margin-bottom:14px;}
+  .product-price{font-size:26px;font-weight:700;color:var(--black);margin-bottom:20px;}
+  .product-price.product-price-cta{
+    font-size:15px;font-weight:700;color:var(--yellow-dark);text-transform:uppercase;letter-spacing:0.05em;
+  }
   .product-desc{font-size:15px;color:var(--steel-dark);line-height:1.8;margin-bottom:28px;white-space:pre-line;}
   .product-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;}
   .product-actions .btn{flex:1;min-width:210px;}
@@ -224,6 +228,7 @@
     <div class="product-info">
       <div class="product-cats" id="pCats"></div>
       <h1 id="pTitle"></h1>
+      <div class="product-price" id="pPrice"></div>
       <p class="product-desc" id="pDesc"></p>
       <div class="product-actions">
         <button class="btn btn-outline" id="pConsult">Consultar por WhatsApp</button>
@@ -351,6 +356,10 @@ function relatedCardHTML(p){
   document.getElementById('bcName').textContent = product.name;
   document.getElementById('pBrand').textContent = product.brand;
   document.getElementById('pTitle').textContent = product.name;
+  const hasPrice = product.price != null && product.price !== '';
+  const priceEl = document.getElementById('pPrice');
+  priceEl.textContent = hasPrice ? dwFormatPrice(product.price) : 'Consultar precio';
+  priceEl.classList.toggle('product-price-cta', !hasPrice);
   document.getElementById('pDesc').textContent = product.desc && product.desc.length
     ? product.desc
     : 'Todavía no cargamos la descripción completa de este producto — consultanos y te pasamos todos los detalles técnicos.';

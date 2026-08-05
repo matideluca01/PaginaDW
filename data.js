@@ -83,3 +83,7 @@ async function dwLoadProductsFromSupabase(){
 function dwProductImage(p){
   return p.image_url || ('images/productos/' + p.id + '.jpg');
 }
+
+function dwFormatPrice(price){
+  return '$' + Number(price).toLocaleString('es-AR');
+}
