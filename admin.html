@@ -64,6 +64,17 @@
     position:fixed;top:18px;right:22px;background:none;border:none;color:#fff;
     font-size:32px;cursor:pointer;line-height:1;
   }
+  .thumb-wrap{position:relative;width:90px;margin-top:8px;display:inline-block;}
+  .thumb-wrap img{width:90px;height:90px;object-fit:cover;border-radius:var(--radius);display:block;}
+  .thumb-x{
+    position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;
+    background:#a11;color:#fff;border:2px solid #fff;font-size:14px;line-height:1;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  }
+  .thumb-x:hover{background:#c81f1f;}
+  .thumb-x-inline{position:static;margin-left:8px;width:20px;height:20px;font-size:12px;vertical-align:middle;}
+  .gallery-thumb{position:relative;width:70px;}
+  .gallery-thumb img{width:70px;height:70px;object-fit:cover;border-radius:var(--radius);display:block;}
   .row-actions{display:flex;gap:6px;}
   .row-actions button{background:none;border:1px solid var(--line);border-radius:var(--radius);padding:5px 10px;cursor:pointer;font-size:12px;}
   .modal-bg{
@@ -218,10 +229,18 @@
         <textarea id="pIncludes" placeholder="Un ítem por línea, ej:&#10;1 disco de corte&#10;Maletín&#10;Llave de ajuste"></textarea>
       </div>
       <div class="field">
-        <label>Foto del producto</label>
+        <label>Foto del producto (principal)</label>
         <input type="file" id="pImageFile" accept="image/*">
         <input type="hidden" id="pImageUrl">
-        <img id="pImagePreview" style="max-width:90px;margin-top:8px;display:none;border-radius:2px;">
+        <div id="pImageCurrent" class="thumb-wrap" style="display:none;">
+          <img id="pImagePreview" alt="">
+          <button type="button" id="removeImageBtn" class="thumb-x" aria-label="Quitar foto">&times;</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fotos adicionales</label>
+        <div id="galleryThumbs" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;"></div>
+        <input type="file" id="pGalleryFile" accept="image/*" multiple>
       </div>
       <div class="field">
         <label>Ficha técnica en PDF (opcional)</label>
@@ -229,7 +248,7 @@
         <input type="hidden" id="pPdfUrl">
         <div id="pPdfCurrent" style="display:none;margin-top:6px;font-size:13px;">
           <a id="pPdfLink" href="#" target="_blank" rel="noopener">Ver PDF cargado</a>
-          · <button type="button" id="removePdfBtn" class="btn-danger" style="padding:3px 9px;">Quitar</button>
+          <button type="button" id="removePdfBtn" class="thumb-x thumb-x-inline" aria-label="Quitar PDF">&times;</button>
         </div>
       </div>
       <div class="field">
@@ -539,8 +558,11 @@ function openProductModal(id){
   document.getElementById('pIncludes').value = p ? (p.includes||'') : '';
   document.getElementById('pImageUrl').value = p ? (p.image_url||'') : '';
   document.getElementById('pImageFile').value = '';
-  const preview = document.getElementById('pImagePreview');
-  if (p && p.image_url){ preview.src = p.image_url; preview.style.display='block'; } else { preview.style.display='none'; }
+  imageRemoved = false;
+  updateImageCurrentUI();
+  galleryItems = p && Array.isArray(p.gallery_urls) ? p.gallery_urls.map(url=>({ url, file:null })) : [];
+  document.getElementById('pGalleryFile').value = '';
+  renderGalleryThumbs();
   document.getElementById('pPdfFile').value = '';
   document.getElementById('pPdfUrl').value = p ? (p.datasheet_url||'') : '';
   pdfRemoved = false;
@@ -574,12 +596,55 @@ document.getElementById('pPdfFile').addEventListener('change', ()=>{
   if (document.getElementById('pPdfFile').files[0]) pdfRemoved = false;
 });
 
-document.getElementById('pImageFile').addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if (!file) return;
+// --- Foto principal ---
+let imageRemoved = false;
+
+function updateImageCurrentUI(){
+  const url = document.getElementById('pImageUrl').value;
+  const file = document.getElementById('pImageFile').files[0];
+  const wrap = document.getElementById('pImageCurrent');
   const preview = document.getElementById('pImagePreview');
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = 'block';
+  if (file){
+    preview.src = URL.createObjectURL(file);
+    wrap.style.display = 'inline-block';
+  } else if (url && !imageRemoved){
+    preview.src = url;
+    wrap.style.display = 'inline-block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+document.getElementById('removeImageBtn').onclick = ()=>{
+  imageRemoved = true;
+  document.getElementById('pImageFile').value = '';
+  updateImageCurrentUI();
+};
+document.getElementById('pImageFile').addEventListener('change', (e)=>{
+  if (e.target.files[0]) imageRemoved = false;
+  updateImageCurrentUI();
+});
+
+// --- Fotos adicionales (galería) ---
+let galleryItems = []; // { url: string|null, file: File|null }
+
+function renderGalleryThumbs(){
+  const wrap = document.getElementById('galleryThumbs');
+  wrap.innerHTML = galleryItems.map((item, i) => `
+    <div class="gallery-thumb">
+      <img src="${item.url || URL.createObjectURL(item.file)}" alt="">
+      <button type="button" class="thumb-x" data-gallery-remove="${i}" aria-label="Quitar foto">&times;</button>
+    </div>`).join('');
+  wrap.querySelectorAll('[data-gallery-remove]').forEach(btn=>{
+    btn.onclick = ()=>{
+      galleryItems.splice(Number(btn.dataset.galleryRemove), 1);
+      renderGalleryThumbs();
+    };
+  });
+}
+document.getElementById('pGalleryFile').addEventListener('change', (e)=>{
+  Array.from(e.target.files).forEach(file => galleryItems.push({ url:null, file }));
+  e.target.value = '';
+  renderGalleryThumbs();
 });
 
 document.getElementById('productForm').addEventListener('submit', async (e)=>{
@@ -592,7 +657,7 @@ document.getElementById('productForm').addEventListener('submit', async (e)=>{
     const name = document.getElementById('pName').value.trim();
     const id = existingId || (slugify(name) + '-' + Math.random().toString(36).slice(2,7));
     const categories = Array.from(document.getElementById('pCategories').selectedOptions).map(o=>o.value);
-    let imageUrl = document.getElementById('pImageUrl').value || null;
+    let imageUrl = imageRemoved ? null : (document.getElementById('pImageUrl').value || null);
 
     const file = document.getElementById('pImageFile').files[0];
     if (file){
@@ -601,6 +666,16 @@ document.getElementById('productForm').addEventListener('submit', async (e)=>{
       if (upErr) throw upErr;
       const { data: pub } = supabaseClient.storage.from('product-images').getPublicUrl(path);
       imageUrl = pub.publicUrl;
+    }
+
+    const galleryUrls = [];
+    for (const item of galleryItems){
+      if (item.url){ galleryUrls.push(item.url); continue; }
+      const galPath = id + '-gal-' + Date.now() + '-' + Math.random().toString(36).slice(2,6) + '.' + item.file.name.split('.').pop();
+      const { error: galUpErr } = await supabaseClient.storage.from('product-images').upload(galPath, item.file, { upsert:true });
+      if (galUpErr) throw galUpErr;
+      const { data: galPub } = supabaseClient.storage.from('product-images').getPublicUrl(galPath);
+      galleryUrls.push(galPub.publicUrl);
     }
 
     let pdfUrl = pdfRemoved ? null : (document.getElementById('pPdfUrl').value || null);
@@ -624,6 +699,7 @@ document.getElementById('productForm').addEventListener('submit', async (e)=>{
       price: document.getElementById('pPrice').value === '' ? null : Number(document.getElementById('pPrice').value),
       stock: Number(document.getElementById('pStock').value || 0),
       image_url: imageUrl,
+      gallery_urls: galleryUrls,
       active: document.getElementById('pActive').checked,
       updated_at: new Date().toISOString()
     };

@@ -106,6 +106,14 @@
     letter-spacing:0.1em;text-transform:uppercase;position:relative;z-index:0;
   }
 
+  .product-gallery{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .product-gallery img{
+    width:64px;height:64px;object-fit:cover;border-radius:var(--radius);cursor:pointer;
+    border:2px solid transparent;opacity:.75;transition:opacity .15s,border-color .15s;
+  }
+  .product-gallery img:hover{opacity:1;}
+  .product-gallery img.active{border-color:var(--yellow);opacity:1;}
+
   .product-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
   .product-cats span{
     font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;
@@ -239,10 +247,13 @@
 
 <main class="product-page wrap" id="productPage" style="display:none;">
   <div class="product-layout">
-    <div class="product-photo">
-      <img id="pImg" alt="" loading="lazy" style="display:none;" onerror="this.style.display='none'">
-      <span class="brand-tag" id="pBrand"></span>
-      <span class="ph-label">Foto próximamente</span>
+    <div>
+      <div class="product-photo">
+        <img id="pImg" alt="" loading="lazy" style="display:none;" onerror="this.style.display='none'">
+        <span class="brand-tag" id="pBrand"></span>
+        <span class="ph-label">Foto próximamente</span>
+      </div>
+      <div class="product-gallery" id="productGallery" style="display:none;"></div>
     </div>
     <div class="product-info">
       <div class="product-cats" id="pCats"></div>
@@ -416,6 +427,24 @@ function relatedCardHTML(p){
   img.style.display = '';
   img.src = dwProductImage(product);
   img.alt = product.name;
+
+  const galleryEl = document.getElementById('productGallery');
+  const galleryPhotos = [dwProductImage(product), ...(product.gallery_urls || [])];
+  if (galleryPhotos.length > 1){
+    galleryEl.innerHTML = galleryPhotos.map((url, i) =>
+      `<img src="${url}" alt="" class="${i === 0 ? 'active' : ''}" data-gallery-src="${url}">`
+    ).join('');
+    galleryEl.querySelectorAll('img').forEach(thumb=>{
+      thumb.addEventListener('click', ()=>{
+        img.src = thumb.dataset.gallerySrc;
+        galleryEl.querySelectorAll('img').forEach(t=>t.classList.remove('active'));
+        thumb.classList.add('active');
+      });
+    });
+    galleryEl.style.display = 'flex';
+  } else {
+    galleryEl.style.display = 'none';
+  }
 
   document.getElementById('pConsult').addEventListener('click', ()=>{
     window.open(wspLink(`Hola! Quería consultar por: ${product.name} (${product.brand}).`), '_blank');
