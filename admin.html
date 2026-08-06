@@ -141,7 +141,8 @@
           <input type="text" id="productSearch" placeholder="Buscar producto..." style="max-width:280px;">
           <select id="productBrandFilter" style="max-width:200px;"><option value="">Todas las marcas</option></select>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-outline" id="fixGrinderNamesBtn" style="font-size:12px;color:#a11;border-color:#a11;">Normalizar nombres de amoladoras (una vez)</button>
           <button class="btn-outline" id="importExcelBtn">Importar desde Excel</button>
           <button class="btn" id="newProductBtn">+ Nuevo producto</button>
         </div>
@@ -203,6 +204,10 @@
         <textarea id="pDesc"></textarea>
       </div>
       <div class="field">
+        <label>Incluye</label>
+        <textarea id="pIncludes" placeholder="Un ítem por línea, ej:&#10;1 disco de corte&#10;Maletín&#10;Llave de ajuste"></textarea>
+      </div>
+      <div class="field">
         <label>Foto del producto</label>
         <input type="file" id="pImageFile" accept="image/*">
         <input type="hidden" id="pImageUrl">
@@ -236,7 +241,8 @@
     <p class="sub">
       Subí un archivo .xlsx, .xls o .csv con columnas: <b>nombre</b>, <b>marca</b>, <b>categorias</b>
       (opcional — si la dejás vacía se detecta sola por el nombre), <b>precio</b>, <b>stock</b>,
-      <b>descripcion</b>, <b>imagen_url</b> e <b>datasheet_url</b> (opcional, link a un PDF de ficha técnica ya alojado).
+      <b>descripcion</b>, <b>imagen_url</b>, <b>datasheet_url</b> (opcional, link a un PDF de ficha técnica ya alojado)
+      e <b>incluye</b> (opcional, un ítem por línea dentro de la celda).
     </p>
     <p style="margin-bottom:14px;"><a href="#" id="downloadTemplateLink">Descargar planilla de ejemplo</a></p>
     <div class="field">
@@ -501,6 +507,7 @@ function openProductModal(id){
   document.getElementById('pPrice').value = p && p.price != null ? p.price : '';
   document.getElementById('pStock').value = p ? (p.stock ?? 0) : 0;
   document.getElementById('pDesc').value = p ? (p.description||'') : '';
+  document.getElementById('pIncludes').value = p ? (p.includes||'') : '';
   document.getElementById('pImageUrl').value = p ? (p.image_url||'') : '';
   document.getElementById('pImageFile').value = '';
   const preview = document.getElementById('pImagePreview');
@@ -583,6 +590,7 @@ document.getElementById('productForm').addEventListener('submit', async (e)=>{
       brand: document.getElementById('pBrand').value.trim(),
       categories,
       description: document.getElementById('pDesc').value.trim(),
+      includes: document.getElementById('pIncludes').value.trim(),
       datasheet_url: pdfUrl,
       price: document.getElementById('pPrice').value === '' ? null : Number(document.getElementById('pPrice').value),
       stock: Number(document.getElementById('pStock').value || 0),
@@ -611,6 +619,50 @@ async function deleteProduct(id){
   await loadProducts();
 }
 
+// --- Utilidad temporal: normalizar nombres de amoladoras a "Amoladora Angular/Recta [Potencia]W [Marca]" ---
+// Solo toca el campo "name" de estos productos puntuales. Se saca del código después de usarla una vez.
+const GRINDER_RENAME_MAP = {
+  'amoladora-115-mm-750w-ultra-compacta-dewalt-dwe750-gkiem': 'Amoladora Angular 750W DeWalt',
+  'amoladora-7-pulgadas-180mm-dewalt-dwe4577n-2700w-slxhr': 'Amoladora Angular 2700W DeWalt',
+  'amoladora-angular-2600watt-dewalt-dwe497-1izhn': 'Amoladora Angular 2600W DeWalt',
+  'amoladora-angular-1700w-dewalt-dwe4324-57s7k': 'Amoladora Angular 1700W DeWalt',
+  'amoladora-angular-1500w-dewalt-dwe4336-1eeas': 'Amoladora Angular 1500W DeWalt',
+  'amoladora-angular-7p-2600w-dwe497-14u7r': 'Amoladora Angular 2600W DeWalt',
+  'amoladora-angular-dewalt-700-watts-dwe4010-jez0n': 'Amoladora Angular 700W DeWalt',
+  'amoladora-angular-4-1-2-pulg-115mm-710w-stgs7115-ar-f8h9y': 'Amoladora Angular 710W Stanley',
+  'amoladora-recta-450w-dewalt-dwe4887-1a7dh': 'Amoladora Recta 450W DeWalt',
+  'amoladora-angular-2200-w-180-mm-7-aml2200-8-i9c0q': 'Amoladora Angular 2200W Lusqtoff',
+  'amoladora-angular-720-w-115-mm-l820-7-19zaq': 'Amoladora Angular 720W Lusqtoff',
+  'amoladora-recta-710-w-10-mm-arl710-8-1pg6h': 'Amoladora Recta 710W Lusqtoff',
+  'amoladora-angular-brushless-2200-w-ml2200b-8-onbii': 'Amoladora Angular 2200W Lusqtoff',
+  'amoladora-angular-brushless-1300-w-aml1300b-8-kq00n': 'Amoladora Angular 1300W Lusqtoff',
+  'amoladora-angular-haa006-mfgon': 'Amoladora Angular 2350W Hamilton',
+  'amoladora-angular-haa002-a-u9e3h': 'Amoladora Angular 1200W Hamilton',
+  'amoladora-angular-haa001-zwduq': 'Amoladora Angular 850W Hamilton',
+  'amoladora-angular-1500w-dewalt-dwe4314n-1vmp6': 'Amoladora Angular 1500W DeWalt',
+  'amoladora-angulat-7-flexvolt-dcg440b-dewalt-1rynn': 'Amoladora Angular 2300W DeWalt',
+  'amoladora-angular-2200watt-dewalt-dwe491-176hl': 'Amoladora Angular 2200W DeWalt',
+  'amoladora-angular-4-1-2-pulg-115mm-1050w-sgs1045-ar-130o7': 'Amoladora Angular 1050W Stanley',
+  'amoladora-angular-1200w-dewalt-dwe4214-ocsiw': 'Amoladora Angular 1200W DeWalt',
+  'amoladora-angular-1200-watts-dewalt-profesional-dwe4212-16lfg': 'Amoladora Angular 1200W DeWalt',
+  'amoladora-angular-115mm-900w-dwe4120-14ebs': 'Amoladora Angular 900W DeWalt',
+  'amoladora-angular-1010-w-aml1010-8-gqgui': 'Amoladora Angular 1010W Lusqtoff',
+  'amoladora-angular-1010-w-aml1010-8-1ft8a': 'Amoladora Angular 1010W Lusqtoff',
+  'amoladora-angular-dewalt-dwe490-hg3ot': 'Amoladora Angular 2200W DeWalt'
+};
+
+document.getElementById('fixGrinderNamesBtn').addEventListener('click', async ()=>{
+  const entries = Object.entries(GRINDER_RENAME_MAP);
+  if (!confirm(`Esto va a renombrar ${entries.length} amoladoras al formato "Amoladora Angular/Recta [Potencia]W [Marca]". Solo cambia el nombre, nada más. ¿Confirmás?`)) return;
+  let ok = 0, failed = [];
+  for (const [id, name] of entries){
+    const { error } = await supabaseClient.from('products').update({ name, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) failed.push(id); else ok++;
+  }
+  await loadProducts();
+  alert(`Listo: ${ok} de ${entries.length} renombrados.` + (failed.length ? `\nFallaron: ${failed.join(', ')}` : ''));
+});
+
 // --- Importar productos desde Excel ---
 let importRows = [];
 
@@ -627,7 +679,8 @@ const IMPORT_HEADER_MAP = {
   stock:'stock',
   descripcion:'description', description:'description', desc:'description',
   imagen_url:'image_url', imagenurl:'image_url', imagen:'image_url', image:'image_url', image_url:'image_url',
-  ficha_tecnica_pdf:'datasheet_url', ficha_pdf:'datasheet_url', pdf:'datasheet_url', datasheet_url:'datasheet_url'
+  ficha_tecnica_pdf:'datasheet_url', ficha_pdf:'datasheet_url', pdf:'datasheet_url', datasheet_url:'datasheet_url',
+  incluye:'includes', que_incluye:'includes', includes:'includes'
 };
 
 document.getElementById('importExcelBtn').onclick = ()=>{
@@ -643,8 +696,8 @@ document.getElementById('cancelImportBtn').onclick = ()=> document.getElementByI
 document.getElementById('downloadTemplateLink').addEventListener('click', (e)=>{
   e.preventDefault();
   const ws = XLSX.utils.aoa_to_sheet([
-    ['nombre', 'marca', 'categorias', 'precio', 'stock', 'descripcion', 'imagen_url', 'datasheet_url'],
-    ['Amoladora angular 900W', 'Bosch', '', 15000, 5, 'Amoladora angular profesional', '', '']
+    ['nombre', 'marca', 'categorias', 'precio', 'stock', 'descripcion', 'imagen_url', 'datasheet_url', 'incluye'],
+    ['Amoladora angular 900W', 'Bosch', '', 15000, 5, 'Amoladora angular profesional', '', '', '1 disco de corte\nMaletín\nLlave de ajuste']
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Productos');
@@ -688,6 +741,7 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
         brand: (obj.brand||'').toString().trim(),
         categories,
         description: (obj.description||'').toString().trim(),
+        includes: (obj.includes||'').toString().trim(),
         price: obj.price === '' || obj.price == null ? null : Number(obj.price),
         stock: obj.stock === '' || obj.stock == null ? 0 : Number(obj.stock),
         image_url: (obj.image_url||'').toString().trim() || null,

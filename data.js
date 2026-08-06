@@ -63,7 +63,8 @@ async function dwLoadProductsFromSupabase(){
       price: p.price,
       stock: p.stock,
       image_url: p.image_url || null,
-      datasheet_url: p.datasheet_url || null
+      datasheet_url: p.datasheet_url || null,
+      includes: p.includes || ''
     }));
 
     PRODUCTS.length = 0;

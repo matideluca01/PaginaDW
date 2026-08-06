@@ -118,6 +118,20 @@
     font-size:15px;font-weight:700;color:var(--yellow-dark);text-transform:uppercase;letter-spacing:0.05em;
   }
   .product-desc{font-size:15px;color:var(--steel-dark);line-height:1.8;margin-bottom:28px;white-space:pre-line;}
+  .product-includes{margin-bottom:24px;}
+  .product-includes h4{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;
+    color:var(--steel-dark);text-transform:uppercase;margin-bottom:10px;
+  }
+  .product-includes ul{list-style:none;}
+  .product-includes li{
+    font-size:14.5px;color:var(--black);padding:6px 0 6px 22px;position:relative;
+    border-bottom:1px solid var(--line);
+  }
+  .product-includes li:last-child{border-bottom:none;}
+  .product-includes li::before{
+    content:'✓';position:absolute;left:0;color:var(--yellow-dark);font-weight:700;
+  }
   .product-pdf-link{
     display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;font-size:13px;font-weight:700;
     color:var(--black);text-decoration:none;border-bottom:2px solid var(--yellow);padding-bottom:2px;
@@ -235,6 +249,10 @@
       <h1 id="pTitle"></h1>
       <div class="product-price" id="pPrice"></div>
       <p class="product-desc" id="pDesc"></p>
+      <div class="product-includes" id="pIncludesWrap" style="display:none;">
+        <h4>Incluye</h4>
+        <ul id="pIncludesList"></ul>
+      </div>
       <a id="pPdfLink" href="#" target="_blank" rel="noopener" class="product-pdf-link" style="display:none;">Descargar ficha técnica (PDF)</a>
       <div class="product-actions">
         <button class="btn btn-outline" id="pConsult">Consultar por WhatsApp</button>
@@ -370,6 +388,21 @@ function relatedCardHTML(p){
     ? product.desc
     : 'Todavía no cargamos la descripción completa de este producto — consultanos y te pasamos todos los detalles técnicos.';
   document.getElementById('pCats').innerHTML = product.categories.map(c=>`<span>${c}</span>`).join('');
+
+  const includesItems = (product.includes || '').split(/[\n;]/).map(s=>s.trim()).filter(Boolean);
+  const includesWrap = document.getElementById('pIncludesWrap');
+  const includesList = document.getElementById('pIncludesList');
+  includesList.innerHTML = '';
+  if (includesItems.length){
+    includesItems.forEach(item=>{
+      const li = document.createElement('li');
+      li.textContent = item;
+      includesList.appendChild(li);
+    });
+    includesWrap.style.display = 'block';
+  } else {
+    includesWrap.style.display = 'none';
+  }
 
   const pdfLink = document.getElementById('pPdfLink');
   if (product.datasheet_url){
