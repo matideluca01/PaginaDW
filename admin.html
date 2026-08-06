@@ -53,7 +53,17 @@
   table{width:100%;border-collapse:collapse;background:#fff;}
   th,td{padding:10px;border-bottom:1px solid var(--off-white);text-align:left;font-size:13px;vertical-align:middle;}
   th{background:var(--black);color:#fff;font-size:12px;text-transform:uppercase;}
-  td img{width:44px;height:44px;object-fit:contain;background:#f2f2ee;border-radius:var(--radius);}
+  td img{width:44px;height:44px;object-fit:contain;background:#f2f2ee;border-radius:var(--radius);cursor:zoom-in;}
+  .img-lightbox-bg{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:80;
+    align-items:center;justify-content:center;padding:24px;cursor:zoom-out;
+  }
+  .img-lightbox-bg.show{display:flex;}
+  .img-lightbox-bg img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:var(--radius);background:#fff;}
+  .img-lightbox-close{
+    position:fixed;top:18px;right:22px;background:none;border:none;color:#fff;
+    font-size:32px;cursor:pointer;line-height:1;
+  }
   .row-actions{display:flex;gap:6px;}
   .row-actions button{background:none;border:1px solid var(--line);border-radius:var(--radius);padding:5px 10px;cursor:pointer;font-size:12px;}
   .modal-bg{
@@ -265,6 +275,12 @@
   </div>
 </div>
 
+<!-- Visor ampliado de foto -->
+<div class="img-lightbox-bg" id="imgLightboxBg">
+  <button class="img-lightbox-close" id="imgLightboxClose" aria-label="Cerrar">&times;</button>
+  <img id="imgLightboxImg" src="" alt="">
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="supabase-config.js"></script>
@@ -461,7 +477,7 @@ function renderProductsTable(filter){
     const tr = document.createElement('tr');
     const img = p.image_url || ('images/productos/' + p.id + '.jpg');
     tr.innerHTML = `
-      <td><img src="${img}" onerror="this.style.opacity=0.2" alt=""></td>
+      <td><img src="${img}" data-zoom="${img}" onerror="this.style.opacity=0.2" alt=""></td>
       <td>${p.name}</td>
       <td>${p.brand || ''}</td>
       <td>${p.price != null ? '$' + Number(p.price).toLocaleString('es-AR') : '—'}</td>
@@ -475,7 +491,20 @@ function renderProductsTable(filter){
   });
   tbody.querySelectorAll('[data-edit]').forEach(b=> b.onclick = ()=> openProductModal(b.dataset.edit));
   tbody.querySelectorAll('[data-del]').forEach(b=> b.onclick = ()=> deleteProduct(b.dataset.del));
+  tbody.querySelectorAll('[data-zoom]').forEach(img=> img.onclick = ()=> openImgLightbox(img.dataset.zoom));
 }
+
+// --- Visor ampliado de foto ---
+function openImgLightbox(src){
+  document.getElementById('imgLightboxImg').src = src;
+  document.getElementById('imgLightboxBg').classList.add('show');
+}
+function closeImgLightbox(){
+  document.getElementById('imgLightboxBg').classList.remove('show');
+}
+document.getElementById('imgLightboxBg').addEventListener('click', closeImgLightbox);
+document.getElementById('imgLightboxClose').addEventListener('click', closeImgLightbox);
+document.getElementById('imgLightboxImg').addEventListener('click', (e)=> e.stopPropagation());
 
 document.getElementById('productSearch').addEventListener('input', (e)=> renderProductsTable(e.target.value));
 document.getElementById('productBrandFilter').addEventListener('change', ()=> renderProductsTable());
