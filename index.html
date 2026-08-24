@@ -59,6 +59,26 @@
     background:repeating-linear-gradient(135deg,var(--black) 0 18px,var(--yellow) 18px 36px);
   }
 
+  /* Lluvia de "OFERTA" al entrar a la página */
+  #ofertaRain{
+    position:fixed;inset:0;pointer-events:none;z-index:9999;
+    overflow:hidden;
+  }
+  .oferta-drop{
+    position:absolute;top:-60px;
+    font-family:'JetBrains Mono',monospace;font-weight:800;
+    text-transform:uppercase;letter-spacing:.04em;
+    color:var(--yellow);text-shadow:0 2px 8px rgba(0,0,0,0.45);
+    white-space:nowrap;
+    animation:ofertaFall linear forwards;
+  }
+  @keyframes ofertaFall{
+    0%{transform:translateY(-60px) rotate(-8deg);opacity:0;}
+    10%{opacity:1;}
+    85%{opacity:1;}
+    100%{transform:translateY(112vh) rotate(8deg);opacity:0;}
+  }
+
   /* Banner de ofertas */
   #promoBanner{
     position:relative;display:none;background:var(--black);
@@ -741,6 +761,8 @@
 </head>
 <body>
 
+<div id="ofertaRain"></div>
+
 <header>
   <div class="header-inner">
     <a href="#top" class="logo">
@@ -1098,6 +1120,24 @@ const genericMsg = "Hola D.W.Mendoza! Quería hacer una consulta.";
   document.getElementById(id).href = wspLink(genericMsg);
 });
 
+// ---- Lluvia de "OFERTA" al entrar (solo si hay alguna oferta activa) ----
+function spawnOfertaRain(){
+  const container = document.getElementById('ofertaRain');
+  const totalDrops = 22;
+  for (let i = 0; i < totalDrops; i++){
+    const drop = document.createElement('span');
+    drop.className = 'oferta-drop';
+    drop.textContent = 'OFERTA';
+    drop.style.left = Math.random() * 96 + '%';
+    drop.style.fontSize = (14 + Math.random() * 16) + 'px';
+    drop.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
+    drop.style.animationDelay = (Math.random() * 1.6) + 's';
+    container.appendChild(drop);
+  }
+  // Sacamos todo del DOM cuando termina la animación más larga, para no dejar nodos colgados
+  setTimeout(() => { container.innerHTML = ''; }, 6000);
+}
+
 // ---- Banner de ofertas (arriba de todo, no bloquea la navegación) ----
 async function loadPromoBanner(){
   try{
@@ -1110,6 +1150,8 @@ async function loadPromoBanner(){
       .gte('end_date', today)
       .order('created_at', { ascending:false });
     if (error || !data || !data.length) return;
+
+    spawnOfertaRain();
 
     // Si el visitante ya cerró el banner en esta sesión, no lo mostramos de nuevo
     if (sessionStorage.getItem('promoBannerClosed') === '1') return;
