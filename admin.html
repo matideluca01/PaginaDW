@@ -307,6 +307,10 @@
         <label>Link al hacer clic (opcional)</label>
         <input type="text" id="promoLink" placeholder="Dejalo vacío para que abra WhatsApp con el título de la oferta">
       </div>
+      <div class="field">
+        <label>Lluvia (texto que cae por la pantalla al entrar a la página)</label>
+        <input type="text" id="promoRainText" placeholder='Ej: OFERTA, 25% OFF, DÍA DEL PADRE — dejalo vacío para no mostrar la lluvia'>
+      </div>
       <div class="field-row">
         <div class="field">
           <label>Desde</label>
@@ -1069,6 +1073,7 @@ function openPromoModal(id){
   document.getElementById('promoId').value = p ? p.id : '';
   document.getElementById('promoTitle').value = p ? p.title : '';
   document.getElementById('promoLink').value = p ? (p.link_url||'') : '';
+  document.getElementById('promoRainText').value = p ? (p.rain_text||'') : '';
   document.getElementById('promoStart').value = p ? p.start_date : '';
   document.getElementById('promoEnd').value = p ? p.end_date : '';
   document.getElementById('promoActive').checked = p ? p.active !== false : true;
@@ -1114,6 +1119,7 @@ document.getElementById('promoForm').addEventListener('submit', async (e)=>{
     const payload = {
       title,
       link_url: document.getElementById('promoLink').value.trim() || null,
+      rain_text: document.getElementById('promoRainText').value.trim() || null,
       start_date: startDate,
       end_date: endDate,
       active: document.getElementById('promoActive').checked,

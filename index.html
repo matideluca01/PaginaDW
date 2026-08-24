@@ -1120,14 +1120,14 @@ const genericMsg = "Hola D.W.Mendoza! Quería hacer una consulta.";
   document.getElementById(id).href = wspLink(genericMsg);
 });
 
-// ---- Lluvia de "OFERTA" al entrar (solo si hay alguna oferta activa) ----
-function spawnOfertaRain(){
+// ---- Lluvia de texto al entrar (solo si hay alguna oferta activa con texto de lluvia cargado) ----
+function spawnOfertaRain(text){
   const container = document.getElementById('ofertaRain');
   const totalDrops = 22;
   for (let i = 0; i < totalDrops; i++){
     const drop = document.createElement('span');
     drop.className = 'oferta-drop';
-    drop.textContent = 'OFERTA';
+    drop.textContent = text;
     drop.style.left = Math.random() * 96 + '%';
     drop.style.fontSize = (14 + Math.random() * 16) + 'px';
     drop.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
@@ -1151,7 +1151,10 @@ async function loadPromoBanner(){
       .order('created_at', { ascending:false });
     if (error || !data || !data.length) return;
 
-    spawnOfertaRain();
+    // Usamos el texto de lluvia de la oferta más reciente que lo tenga cargado.
+    // Si ninguna oferta activa cargó texto de lluvia, no se muestra el efecto.
+    const rainText = data.map(p => (p.rain_text||'').trim()).find(t => t);
+    if (rainText) spawnOfertaRain(rainText);
 
     // Si el visitante ya cerró el banner en esta sesión, no lo mostramos de nuevo
     if (sessionStorage.getItem('promoBannerClosed') === '1') return;
