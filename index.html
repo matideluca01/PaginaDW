@@ -70,20 +70,39 @@
   .promo-slide.active{display:block;}
   .promo-slide a.promo-link{display:block;line-height:0;}
   .promo-slide img{
-    width:100%;height:auto;max-height:520px;
-    object-fit:contain;object-position:center;
-    display:block;margin:0 auto;background:var(--black);
+    width:100%;height:340px;
+    object-fit:cover;object-position:center;
+    display:block;
+  }
+  @media(max-width:640px){
+    .promo-slide img{height:190px;}
   }
   .promo-close{
-    position:absolute;top:10px;right:10px;z-index:5;
+    position:absolute;top:10px;right:10px;z-index:6;
     width:32px;height:32px;border-radius:50%;
     background:rgba(17,17,16,0.75);color:var(--off-white);
     border:none;font-size:18px;line-height:1;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
   }
   .promo-close:hover{background:var(--black);}
+  .promo-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:6;
+    width:38px;height:38px;border-radius:50%;
+    background:rgba(17,17,16,0.55);color:var(--off-white);
+    border:none;font-size:18px;line-height:1;cursor:pointer;
+    display:none;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .promo-arrow:hover{background:rgba(17,17,16,0.85);}
+  .promo-arrow.prev{left:14px;}
+  .promo-arrow.next{right:14px;}
+  @media(max-width:640px){
+    .promo-arrow{width:32px;height:32px;font-size:15px;}
+    .promo-arrow.prev{left:8px;}
+    .promo-arrow.next{right:8px;}
+  }
   .promo-dots{
-    position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;
+    position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:6;
     display:flex;gap:6px;
   }
   .promo-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.5);cursor:pointer;border:none;padding:0;}
@@ -785,7 +804,9 @@
 
 <div id="promoBanner">
   <button class="promo-close" id="promoCloseBtn" aria-label="Cerrar">×</button>
+  <button class="promo-arrow prev" id="promoPrevBtn" aria-label="Oferta anterior">‹</button>
   <div id="promoSlides"></div>
+  <button class="promo-arrow next" id="promoNextBtn" aria-label="Oferta siguiente">›</button>
   <div class="promo-dots" id="promoDots"></div>
 </div>
 
@@ -1106,14 +1127,31 @@ async function loadPromoBanner(){
 
     if (data.length > 1){
       dotsEl.innerHTML = data.map((_, i) => `<button class="promo-dot ${i===0?'active':''}" data-idx="${i}" aria-label="Oferta ${i+1}"></button>`).join('');
+      document.getElementById('promoPrevBtn').style.display = 'flex';
+      document.getElementById('promoNextBtn').style.display = 'flex';
+
       let current = 0;
+      let autoTimer = null;
+
       function showSlide(idx){
-        current = idx;
-        slidesEl.querySelectorAll('.promo-slide').forEach(s => s.classList.toggle('active', +s.dataset.idx === idx));
-        dotsEl.querySelectorAll('.promo-dot').forEach(d => d.classList.toggle('active', +d.dataset.idx === idx));
+        current = (idx + data.length) % data.length;
+        slidesEl.querySelectorAll('.promo-slide').forEach(s => s.classList.toggle('active', +s.dataset.idx === current));
+        dotsEl.querySelectorAll('.promo-dot').forEach(d => d.classList.toggle('active', +d.dataset.idx === current));
       }
-      dotsEl.querySelectorAll('.promo-dot').forEach(dot => dot.addEventListener('click', () => showSlide(+dot.dataset.idx)));
-      setInterval(() => showSlide((current + 1) % data.length), 6000);
+      function startAuto(){
+        clearInterval(autoTimer);
+        autoTimer = setInterval(() => showSlide(current + 1), 6000);
+      }
+      // Al navegar a mano (flecha o punto), mostramos esa oferta y reiniciamos el conteo automático
+      function goTo(idx){ showSlide(idx); startAuto(); }
+
+      dotsEl.querySelectorAll('.promo-dot').forEach(dot => dot.addEventListener('click', () => goTo(+dot.dataset.idx)));
+      document.getElementById('promoPrevBtn').addEventListener('click', () => goTo(current - 1));
+      document.getElementById('promoNextBtn').addEventListener('click', () => goTo(current + 1));
+      startAuto();
+    } else {
+      document.getElementById('promoPrevBtn').style.display = 'none';
+      document.getElementById('promoNextBtn').style.display = 'none';
     }
 
     banner.classList.add('show');
