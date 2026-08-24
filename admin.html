@@ -161,6 +161,8 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <input type="text" id="productSearch" placeholder="Buscar producto..." style="max-width:280px;">
           <select id="productBrandFilter" style="max-width:200px;"><option value="">Todas las marcas</option></select>
+          <button class="btn-outline" id="hideBrandBtn" title="Oculta todos los productos de la marca elegida en el filtro" disabled>Ocultar marca</button>
+          <button class="btn-outline" id="showBrandBtn" title="Muestra todos los productos de la marca elegida en el filtro" disabled>Mostrar marca</button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn-outline" id="fixGrinderNamesBtn" style="font-size:12px;color:#a11;border-color:#a11;">Normalizar nombres de amoladoras (una vez)</button>
@@ -459,6 +461,7 @@ function populateProductOptions(){
   const prevBrandFilter = brandFilterEl.value;
   brandFilterEl.innerHTML = '<option value="">Todas las marcas</option>' + allBrands.map(b=>`<option value="${b}">${b}</option>`).join('');
   if (allBrands.includes(prevBrandFilter)) brandFilterEl.value = prevBrandFilter;
+  updateBrandActionButtons();
 
   const staticCats = typeof CATEGORIES !== 'undefined' ? CATEGORIES.slice() : [];
   const dbCats = productsCache.flatMap(p=>p.categories||[]);
@@ -526,7 +529,37 @@ document.getElementById('imgLightboxClose').addEventListener('click', closeImgLi
 document.getElementById('imgLightboxImg').addEventListener('click', (e)=> e.stopPropagation());
 
 document.getElementById('productSearch').addEventListener('input', (e)=> renderProductsTable(e.target.value));
-document.getElementById('productBrandFilter').addEventListener('change', ()=> renderProductsTable());
+document.getElementById('productBrandFilter').addEventListener('change', ()=>{
+  renderProductsTable();
+  updateBrandActionButtons();
+});
+
+// Habilita/deshabilita los botones de ocultar/mostrar marca según haya una marca elegida en el filtro
+function updateBrandActionButtons(){
+  const brandFilter = document.getElementById('productBrandFilter').value;
+  document.getElementById('hideBrandBtn').disabled = !brandFilter;
+  document.getElementById('showBrandBtn').disabled = !brandFilter;
+}
+
+// Oculta o muestra de una sola vez todos los productos de la marca elegida en el filtro
+async function setBrandVisibility(active){
+  const brandFilter = document.getElementById('productBrandFilter').value;
+  if (!brandFilter) return;
+  const count = productsCache.filter(p => p.brand === brandFilter).length;
+  const accion = active ? 'mostrar' : 'ocultar';
+  if (!confirm(`¿Seguro que querés ${accion} los ${count} productos de la marca "${brandFilter}"?`)) return;
+
+  const { error } = await supabaseClient
+    .from('products')
+    .update({ active, updated_at: new Date().toISOString() })
+    .eq('brand', brandFilter);
+  if (error){ alert('Ocurrió un error: ' + error.message); return; }
+  await loadProducts();
+  updateBrandActionButtons();
+}
+
+document.getElementById('hideBrandBtn').addEventListener('click', ()=> setBrandVisibility(false));
+document.getElementById('showBrandBtn').addEventListener('click', ()=> setBrandVisibility(true));
 
 let categoriesTouchedByUser = false;
 
