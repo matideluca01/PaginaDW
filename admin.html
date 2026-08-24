@@ -1090,7 +1090,7 @@ document.getElementById('promoForm').addEventListener('submit', async (e)=>{
   try{
     const existingId = document.getElementById('promoId').value;
     const title = document.getElementById('promoTitle').value.trim();
-    const id = existingId || (slugify(title) + '-' + Math.random().toString(36).slice(2,7));
+    const filePrefix = slugify(title) + '-' + Date.now();
     const startDate = document.getElementById('promoStart').value;
     const endDate = document.getElementById('promoEnd').value;
 
@@ -1101,7 +1101,7 @@ document.getElementById('promoForm').addEventListener('submit', async (e)=>{
     let imageUrl = promoImageRemoved ? null : (document.getElementById('promoImageUrl').value || null);
     const file = document.getElementById('promoImageFile').files[0];
     if (file){
-      const path = 'promos/' + id + '-' + Date.now() + '.' + file.name.split('.').pop();
+      const path = 'promos/' + filePrefix + '.' + file.name.split('.').pop();
       const { error: upErr } = await supabaseClient.storage.from('product-images').upload(path, file, { upsert:true });
       if (upErr) throw upErr;
       const { data: pub } = supabaseClient.storage.from('product-images').getPublicUrl(path);
@@ -1112,7 +1112,7 @@ document.getElementById('promoForm').addEventListener('submit', async (e)=>{
     }
 
     const payload = {
-      id, title,
+      title,
       link_url: document.getElementById('promoLink').value.trim() || null,
       start_date: startDate,
       end_date: endDate,
@@ -1120,6 +1120,7 @@ document.getElementById('promoForm').addEventListener('submit', async (e)=>{
       image_url: imageUrl,
       updated_at: new Date().toISOString()
     };
+    if (existingId) payload.id = existingId; // Editando: mantenemos el mismo UUID. Si es nueva, lo genera la base de datos sola.
     const { error } = await supabaseClient.from('promotions').upsert(payload);
     if (error) throw error;
 
