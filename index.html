@@ -62,7 +62,6 @@
   /* Banner de ofertas */
   #promoBanner{
     position:relative;display:none;background:var(--black);
-    border-bottom:3px solid var(--yellow);
   }
   #promoBanner.show{display:block;}
   .promo-slide{
@@ -70,7 +69,11 @@
   }
   .promo-slide.active{display:block;}
   .promo-slide a.promo-link{display:block;line-height:0;}
-  .promo-slide img{width:100%;height:auto;max-height:420px;object-fit:cover;display:block;}
+  .promo-slide img{
+    width:100%;height:auto;max-height:520px;
+    object-fit:contain;object-position:center;
+    display:block;margin:0 auto;background:var(--black);
+  }
   .promo-close{
     position:absolute;top:10px;right:10px;z-index:5;
     width:32px;height:32px;border-radius:50%;
@@ -756,12 +759,6 @@
   </div>
 </header>
 
-<div id="promoBanner">
-  <button class="promo-close" id="promoCloseBtn" aria-label="Cerrar">×</button>
-  <div id="promoSlides"></div>
-  <div class="promo-dots" id="promoDots"></div>
-</div>
-
 <div class="hazard"></div>
 
 <section class="hero" id="top">
@@ -785,6 +782,12 @@
     </div>
   </div>
 </section>
+
+<div id="promoBanner">
+  <button class="promo-close" id="promoCloseBtn" aria-label="Cerrar">×</button>
+  <div id="promoSlides"></div>
+  <div class="promo-dots" id="promoDots"></div>
+</div>
 
 <div class="brands">
   <div class="brands-track" id="brandStrip"></div>
