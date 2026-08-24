@@ -139,6 +139,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="inquiries">Consultas</button>
       <button class="tab-btn" data-tab="products">Productos</button>
+      <button class="tab-btn" data-tab="promotions">Ofertas</button>
       <button class="tab-btn" data-tab="users">Usuarios</button>
     </div>
 
@@ -177,6 +178,24 @@
         <tbody id="productsTbody"></tbody>
       </table>
       <div class="empty" id="productsEmpty" style="display:none;">No hay productos cargados todavía.</div>
+    </div>
+
+    <!-- OFERTAS -->
+    <div class="panel" id="panel-promotions">
+      <p class="sub">Publicaciones tipo flyer con fecha de inicio y fin. Se muestran solas en la página, en la fecha que elijas, arriba de todo.</p>
+      <div class="toolbar">
+        <div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" id="newPromoBtn">+ Nueva oferta</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Foto</th><th>Título</th><th>Desde</th><th>Hasta</th><th>Estado</th><th>Activa</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="promotionsTbody"></tbody>
+      </table>
+      <div class="empty" id="promotionsEmpty" style="display:none;">No hay ofertas cargadas todavía.</div>
     </div>
 
     <!-- USUARIOS -->
@@ -265,6 +284,51 @@
   </div>
 </div>
 
+<!-- Modal oferta -->
+<div class="modal-bg" id="promoModalBg">
+  <div class="modal">
+    <h2 id="promoModalTitle">Nueva oferta</h2>
+    <form id="promoForm">
+      <input type="hidden" id="promoId">
+      <div class="field">
+        <label>Título (uso interno, no se muestra en la foto)</label>
+        <input type="text" id="promoTitle" required placeholder="Ej: Semana del Día del Padre">
+      </div>
+      <div class="field">
+        <label>Imagen / flyer de la oferta</label>
+        <input type="file" id="promoImageFile" accept="image/*">
+        <input type="hidden" id="promoImageUrl">
+        <div id="promoImageCurrent" class="thumb-wrap" style="display:none;">
+          <img id="promoImagePreview" alt="">
+          <button type="button" id="removePromoImageBtn" class="thumb-x" aria-label="Quitar foto">&times;</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Link al hacer clic (opcional)</label>
+        <input type="text" id="promoLink" placeholder="Dejalo vacío para que abra WhatsApp con el título de la oferta">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Desde</label>
+          <input type="date" id="promoStart" required>
+        </div>
+        <div class="field">
+          <label>Hasta</label>
+          <input type="date" id="promoEnd" required>
+        </div>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="promoActive" checked style="width:auto;"> Oferta activa</label>
+      </div>
+      <div class="msg" id="promoMsg"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="cancelPromoBtn">Cancelar</button>
+        <button type="submit" class="btn" id="savePromoBtn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal importar Excel -->
 <div class="modal-bg" id="importModalBg">
   <div class="modal" style="max-width:720px;">
@@ -335,6 +399,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'users') loadUsers();
     if (btn.dataset.tab === 'inquiries') loadInquiries();
+    if (btn.dataset.tab === 'promotions') loadPromotions();
   });
 });
 
@@ -926,6 +991,154 @@ document.getElementById('confirmImportBtn').onclick = async ()=>{
     btn.disabled = false;
   }
 };
+
+// --- Ofertas ---
+let promotionsCache = [];
+
+async function loadPromotions(){
+  const { data, error } = await supabaseClient.from('promotions').select('*').order('start_date', {ascending:false});
+  if (error){ console.error(error); return; }
+  promotionsCache = data || [];
+  renderPromotionsTable();
+}
+
+function promoEstado(p){
+  const today = new Date().toISOString().slice(0,10);
+  if (p.active === false) return { txt:'Inactiva', color:'#8A8A7F' };
+  if (today < p.start_date) return { txt:'Programada', color:'#0a7' };
+  if (today > p.end_date) return { txt:'Vencida', color:'#a11' };
+  return { txt:'En curso ahora', color:'#E0A400' };
+}
+
+function renderPromotionsTable(){
+  const tbody = document.getElementById('promotionsTbody');
+  const empty = document.getElementById('promotionsEmpty');
+  empty.style.display = promotionsCache.length ? 'none' : 'block';
+  tbody.innerHTML = '';
+  promotionsCache.forEach(p=>{
+    const estado = promoEstado(p);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><img src="${p.image_url}" data-zoom="${p.image_url}" style="width:60px;height:40px;object-fit:cover;cursor:pointer;" onerror="this.style.opacity=0.2" alt=""></td>
+      <td>${p.title}</td>
+      <td>${p.start_date}</td>
+      <td>${p.end_date}</td>
+      <td style="color:${estado.color};font-weight:600;">${estado.txt}</td>
+      <td>${p.active === false ? 'No' : 'Sí'}</td>
+      <td class="row-actions">
+        <button data-edit-promo="${p.id}">Editar</button>
+        <button data-del-promo="${p.id}">Borrar</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-edit-promo]').forEach(b=> b.onclick = ()=> openPromoModal(b.dataset.editPromo));
+  tbody.querySelectorAll('[data-del-promo]').forEach(b=> b.onclick = ()=> deletePromo(b.dataset.delPromo));
+  tbody.querySelectorAll('[data-zoom]').forEach(img=> img.onclick = ()=> openImgLightbox(img.dataset.zoom));
+}
+
+let promoImageRemoved = false;
+
+function updatePromoImageCurrentUI(){
+  const url = document.getElementById('promoImageUrl').value;
+  const file = document.getElementById('promoImageFile').files[0];
+  const wrap = document.getElementById('promoImageCurrent');
+  const preview = document.getElementById('promoImagePreview');
+  if (file){
+    preview.src = URL.createObjectURL(file);
+    wrap.style.display = 'inline-block';
+  } else if (url && !promoImageRemoved){
+    preview.src = url;
+    wrap.style.display = 'inline-block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+document.getElementById('removePromoImageBtn').onclick = ()=>{
+  promoImageRemoved = true;
+  document.getElementById('promoImageFile').value = '';
+  updatePromoImageCurrentUI();
+};
+document.getElementById('promoImageFile').addEventListener('change', (e)=>{
+  if (e.target.files[0]) promoImageRemoved = false;
+  updatePromoImageCurrentUI();
+});
+
+function openPromoModal(id){
+  const p = id ? promotionsCache.find(x=>x.id===id) : null;
+  document.getElementById('promoModalTitle').textContent = p ? 'Editar oferta' : 'Nueva oferta';
+  document.getElementById('promoId').value = p ? p.id : '';
+  document.getElementById('promoTitle').value = p ? p.title : '';
+  document.getElementById('promoLink').value = p ? (p.link_url||'') : '';
+  document.getElementById('promoStart').value = p ? p.start_date : '';
+  document.getElementById('promoEnd').value = p ? p.end_date : '';
+  document.getElementById('promoActive').checked = p ? p.active !== false : true;
+  document.getElementById('promoImageUrl').value = p ? (p.image_url||'') : '';
+  document.getElementById('promoImageFile').value = '';
+  promoImageRemoved = false;
+  updatePromoImageCurrentUI();
+  document.getElementById('promoMsg').style.display='none';
+  document.getElementById('promoModalBg').classList.add('show');
+}
+document.getElementById('newPromoBtn').onclick = ()=> openPromoModal(null);
+document.getElementById('cancelPromoBtn').onclick = ()=> document.getElementById('promoModalBg').classList.remove('show');
+
+document.getElementById('promoForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('promoMsg');
+  const saveBtn = document.getElementById('savePromoBtn');
+  saveBtn.disabled = true;
+  try{
+    const existingId = document.getElementById('promoId').value;
+    const title = document.getElementById('promoTitle').value.trim();
+    const id = existingId || (slugify(title) + '-' + Math.random().toString(36).slice(2,7));
+    const startDate = document.getElementById('promoStart').value;
+    const endDate = document.getElementById('promoEnd').value;
+
+    if (endDate < startDate){
+      throw new Error('La fecha "Hasta" no puede ser anterior a la fecha "Desde".');
+    }
+
+    let imageUrl = promoImageRemoved ? null : (document.getElementById('promoImageUrl').value || null);
+    const file = document.getElementById('promoImageFile').files[0];
+    if (file){
+      const path = 'promos/' + id + '-' + Date.now() + '.' + file.name.split('.').pop();
+      const { error: upErr } = await supabaseClient.storage.from('product-images').upload(path, file, { upsert:true });
+      if (upErr) throw upErr;
+      const { data: pub } = supabaseClient.storage.from('product-images').getPublicUrl(path);
+      imageUrl = pub.publicUrl;
+    }
+    if (!imageUrl){
+      throw new Error('Subí una imagen para la oferta.');
+    }
+
+    const payload = {
+      id, title,
+      link_url: document.getElementById('promoLink').value.trim() || null,
+      start_date: startDate,
+      end_date: endDate,
+      active: document.getElementById('promoActive').checked,
+      image_url: imageUrl,
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await supabaseClient.from('promotions').upsert(payload);
+    if (error) throw error;
+
+    msg.className = 'msg ok'; msg.style.display = 'block'; msg.textContent = 'Oferta guardada correctamente.';
+    await loadPromotions();
+    setTimeout(()=> document.getElementById('promoModalBg').classList.remove('show'), 700);
+  } catch(err){
+    msg.className = 'msg error'; msg.style.display = 'block'; msg.textContent = 'Error: ' + err.message;
+  } finally {
+    saveBtn.disabled = false;
+  }
+});
+
+async function deletePromo(id){
+  if (!confirm('¿Seguro que querés borrar esta oferta?')) return;
+  const { error } = await supabaseClient.from('promotions').delete().eq('id', id);
+  if (error){ alert('Error al borrar: ' + error.message); return; }
+  await loadPromotions();
+}
 
 // --- Usuarios ---
 async function loadUsers(){
